@@ -27,7 +27,7 @@ func insert(msg *db.Message) httpServer.Response {
 	if msg.Publisher == nil || msg.Msg == nil {
 		return httpServer.BadRequest("missing requiered fields - publisher and/or msg")
 	}
-	err := msg.Insert()
+	err := msg.Add()
 	if err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
@@ -42,8 +42,7 @@ func updateState(msg *db.Message) httpServer.Response {
 	if msg.ID == nil || msg.State == nil {
 		return httpServer.BadRequest("missing requiered fields - id and/or state")
 	}
-	err := msg.SetState()
-	if err != nil {
+	if err := msg.SetState(); err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
 	return httpServer.OK("ok")
