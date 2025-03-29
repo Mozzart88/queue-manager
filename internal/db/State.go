@@ -2,6 +2,7 @@ package db
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/pkg/utils"
 	"fmt"
 )
 
@@ -16,9 +17,17 @@ func (s *State) Get() error {
 		return err
 	}
 	if state == nil {
-		return fmt.Errorf("unkown state: %s", *s.Name)
+		return fmt.Errorf("unkown state: %v", *s)
 	}
-	*s.Id = state.ID()
-	*s.Name = string(state.Name())
+	if s.Id == nil {
+		s.Id = utils.Ptr(state.ID())
+	} else {
+		*s.Id = state.ID()
+	}
+	if s.Name == nil {
+		s.Name = utils.Ptr(string(state.Name()))
+	} else {
+		*s.Name = string(state.Name())
+	}
 	return nil
 }

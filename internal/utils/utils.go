@@ -2,7 +2,7 @@ package utils
 
 import (
 	"expat-news/queue-manager/pkg/logger"
-	httpServer "expat-news/queue-manager/pkg/utils"
+	"expat-news/queue-manager/pkg/utils/httpServer"
 	"fmt"
 	"net/http"
 )
