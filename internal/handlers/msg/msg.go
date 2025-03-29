@@ -55,7 +55,7 @@ func get(msg *db.Message) httpServer.Response {
 		return httpServer.InternalServerError(err.Error())
 	}
 	if msg.ID != nil && msg.Msg == nil {
-		return httpServer.NotFuond(fmt.Sprintf("message with id %d in queue", *msg.ID))
+		return httpServer.NotFound(fmt.Sprintf("message with id %d in queue", *msg.ID))
 	}
 	result, err := json.Marshal(*msg)
 	if err != nil {

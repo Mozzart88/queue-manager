@@ -55,7 +55,7 @@ func get(publisher *db.Publisher) httpServer.Response {
 		return httpServer.InternalServerError(err.Error())
 	}
 	if publisher.Id == nil || publisher.Name == nil {
-		return httpServer.NotFuond(fmt.Sprintf("publisher not found: %v", publisher))
+		return httpServer.NotFound(fmt.Sprintf("publisher not found: %v", publisher))
 	}
 	result, err := json.Marshal(publisher)
 	if err != nil {

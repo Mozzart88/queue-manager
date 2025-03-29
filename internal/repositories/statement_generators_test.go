@@ -110,14 +110,8 @@ func TestGenInsertStatement(t *testing.T) {
 		expected   string
 		whantError bool
 	}{
-		{"", nil, nil, "empty table name", true},
-		{"some", nil, nil, "empty values", true},
-		{"some", &fields{"name"}, nil, "empty values", true},
-		{"some", &fields{"name"}, &values{}, "empty values", true},
 		{"some", &fields{"name"}, &values{"bob"}, "INSERT INTO some (name) VALUES ('bob')", false},
-		{"some", &fields{"name", "age"}, &values{"bob", 1}, "INSERT INTO some (name, age) VALUES ('bob', 1)", false},
-		{"some", nil, &values{"bob", 1}, "INSERT INTO some  VALUES ('bob', 1)", false},       // !! Double space
-		{"some", &fields{}, &values{"bob", 1}, "INSERT INTO some  VALUES ('bob', 1)", false}, // !! Double space
+		{"some", nil, &values{"bob", 1}, "INSERT INTO some  VALUES ('bob', 1)", false}, // !! Double space
 	}
 
 	for _, test := range tests {
@@ -135,32 +129,64 @@ func TestGenInsertStatement(t *testing.T) {
 	}
 }
 
-func TestGenDeleteStatement(t *testing.T) {
-	var l limit = 1
+func TestGenInsertManyStatement(t *testing.T) {
 	tests := []struct {
 		table      string
-		where      *where
-		limit      *limit
+		fields     *fields
+		values     *[]values
 		expected   string
 		whantError bool
 	}{
 		{"", nil, nil, "empty table name", true},
-		{"some", nil, nil, "DELETE FROM some", false},
-		{"some", &where{[]string{"name = 'bob'"}, ""}, nil, "DELETE FROM some WHERE name = 'bob'", false},
-		{"some", &where{[]string{"name = 'bob'"}, ""}, &l, "DELETE FROM some WHERE name = 'bob' LIMIT 1", false},
+		{"some", nil, nil, "empty values", true},
+		{"some", &fields{"name"}, nil, "empty values", true},
+		{"some", &fields{"name"}, &[]values{}, "empty values", true},
+		{"some", &fields{"name"}, &[]values{{"bob"}}, "INSERT INTO some (name) VALUES ('bob')", false},
+		{"some", &fields{"name", "age"}, &[]values{{"bob", 1}}, "INSERT INTO some (name, age) VALUES ('bob', 1)", false},
+		{"some", nil, &[]values{{"bob", 1}}, "INSERT INTO some  VALUES ('bob', 1)", false},       // !! Double space
+		{"some", &fields{}, &[]values{{"bob", 1}}, "INSERT INTO some  VALUES ('bob', 1)", false}, // !! Double space
+		{"some", &fields{"name", "age"}, &[]values{{"bob", 1}, {"ana", 2}}, "INSERT INTO some (name, age) VALUES ('bob', 1), ('ana', 2)", false},
+		{"some", &fields{"name"}, &[]values{{"bob"}, {"ana"}}, "INSERT INTO some (name) VALUES ('bob'), ('ana')", false},
 	}
 
 	for _, test := range tests {
 		var actual string
-		err := genDeleteStatement(&actual, test.table, test.where, test.limit)
+		err := genInsertManyStatement(&actual, test.table, test.fields, test.values)
 		if test.whantError {
 			if err == nil {
-				t.Errorf("genDeleteStatement(res, %v, %v, %v) expected an error, got nil", test.table, test.where, test.limit)
+				t.Errorf("genInsertManyStatement(res, %v, %v, %v) expected an error, got nil", test.table, test.fields, test.values)
 			} else if err.Error() != test.expected {
-				t.Errorf("genDeleteStatement(res, %v, %v, %v) expected an error: %s, got %s", test.table, test.where, test.limit, test.expected, err.Error())
+				t.Errorf("genInsertManyStatement(res, %v, %v, %v) expected an error: %s, got %s", test.table, test.fields, test.values, test.expected, err.Error())
 			}
 		} else if test.expected != actual {
-			t.Errorf("genDeleteStatement(res, %v, %v, %v) = %s, want %s", test.table, test.where, test.limit, actual, test.expected)
+			t.Errorf("genInsertManyStatement(res, %v, %v, %v) = %s, want %s", test.table, test.fields, test.values, actual, test.expected)
+		}
+	}
+}
+
+func TestGenDeleteStatement(t *testing.T) {
+	tests := []struct {
+		table      string
+		where      *where
+		expected   string
+		whantError bool
+	}{
+		{"", nil, "empty table name", true},
+		{"some", nil, "DELETE FROM some", false},
+		{"some", &where{[]string{"name = 'bob'"}, ""}, "DELETE FROM some WHERE name = 'bob'", false},
+	}
+
+	for _, test := range tests {
+		var actual string
+		err := genDeleteStatement(&actual, test.table, test.where)
+		if test.whantError {
+			if err == nil {
+				t.Errorf("genDeleteStatement(res, %v, %v) expected an error, got nil", test.table, test.where)
+			} else if err.Error() != test.expected {
+				t.Errorf("genDeleteStatement(res, %v, %v) expected an error: %s, got %s", test.table, test.where, test.expected, err.Error())
+			}
+		} else if test.expected != actual {
+			t.Errorf("genDeleteStatement(res, %v, %v) = %s, want %s", test.table, test.where, actual, test.expected)
 		}
 	}
 }

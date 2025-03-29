@@ -25,6 +25,10 @@ func (s *State) Name() State_t {
 	return s.name
 }
 
+func NewState(id int, name State_t) *State {
+	return &State{id, name}
+}
+
 func GetState(id *int, name *State_t) (*State, error) {
 	var result State
 	var w where = where{
@@ -54,13 +58,13 @@ func GetState(id *int, name *State_t) (*State, error) {
 	if res == nil {
 		return nil, nil
 	}
-	if id, ok := res["id"].value.(int); ok {
-		result.id = id
+	if id, ok := res["id"].value.(int64); ok {
+		result.id = int(id)
 	} else {
 		return nil, fmt.Errorf("fail to assert type %v", res["id"].value)
 	}
-	if name, ok := res["name"].value.(State_t); ok {
-		result.name = name
+	if name, ok := res["name"].value.(string); ok {
+		result.name = State_t(name)
 	} else {
 		return nil, fmt.Errorf("fail to assert type %v", res["name"].value)
 	}

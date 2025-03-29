@@ -5,7 +5,7 @@ import (
 )
 
 func execSql(sql string) (sql.Result, error) {
-	db := getDBInstance()
+	db := GetDBInstance()
 	res, err := db.Exec(sql)
 	if err != nil {
 		return nil, err
@@ -29,6 +29,22 @@ func insert(table string, f *fields, v *values) (int, error) {
 	return int(resId), nil
 }
 
+func insertMany(table string, f *fields, v *[]values) (int, error) {
+	var sql string
+	if err := genInsertManyStatement(&sql, table, f, v); err != nil {
+		return -1, err
+	}
+	res, err := execSql(sql)
+	if err != nil {
+		return -1, err
+	}
+	result, err := res.RowsAffected()
+	if err != nil {
+		return -1, nil
+	}
+	return int(result), nil
+}
+
 func update(table string, f *fields, w *where) (int, error) {
 	var sql string
 	if err := genUpdateStatement(&sql, table, f, w); err != nil {
@@ -45,9 +61,9 @@ func update(table string, f *fields, w *where) (int, error) {
 	return int(affected), nil
 }
 
-func delete(table string, w *where, l *limit) (int, error) {
+func delete(table string, w *where) (int64, error) {
 	var sql string
-	if err := genDeleteStatement(&sql, table, w, l); err != nil {
+	if err := genDeleteStatement(&sql, table, w); err != nil {
 		return -1, err
 	}
 	res, err := execSql(sql)
@@ -58,7 +74,7 @@ func delete(table string, w *where, l *limit) (int, error) {
 	if err != nil {
 		return -1, nil
 	}
-	return int(affected), nil
+	return affected, nil
 }
 
 type cell struct {
@@ -103,7 +119,7 @@ func rowsToMap(rows *sql.Rows) ([]QueryRow, error) {
 }
 
 func get(table string, f *fields, w *where, o *order, l *limit) ([]QueryRow, error) {
-	db := getDBInstance()
+	db := GetDBInstance()
 	var sql string
 	if err := genSelectStatement(&sql, table, f, w, o, l); err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package db
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"fmt"
 )
 
 type Queue struct {
@@ -36,4 +37,17 @@ func (q *Queue) GetMessage(oldest *bool) (*Message, error) {
 	}
 	result.fillValues(msg)
 	return &result, nil
+}
+
+func (q *Queue) AddMessages(msgs *[]string) (int, error) {
+	var publisherId int
+	publisher, err := repos.GetPublisher(nil, &q.Publisher)
+	if err != nil {
+		return 0, err
+	}
+	if publisher == nil {
+		return 0, fmt.Errorf("unregistered publisher: %s", q.Publisher)
+	}
+	publisherId = publisher.ID()
+	return repos.AddMessages(publisherId, msgs)
 }
