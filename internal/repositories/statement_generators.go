@@ -86,13 +86,7 @@ func genSelectStatement(dst *string, table string, fields *fields, where *where,
 	return nil
 }
 
-func genInsertStatement(dst *string, table string, f *fields, v *values) error {
-	if len(table) == 0 {
-		return fmt.Errorf("empty table name")
-	}
-	if v == nil || len(*v) == 0 {
-		return fmt.Errorf("empty values")
-	}
+func genInsertVals(v *values) string {
 	var vals []string
 	for _, value := range *v {
 		if val, ok := value.(int); ok {
@@ -101,12 +95,29 @@ func genInsertStatement(dst *string, table string, f *fields, v *values) error {
 			vals = append(vals, fmt.Sprintf("'%v'", value))
 		}
 	}
-	var values string = fmt.Sprintf("(%s)", strings.Join(vals, ", "))
+	return fmt.Sprintf("(%s)", strings.Join(vals, ", "))
+}
+
+func genInsertStatement(dst *string, table string, f *fields, v *values) error {
+	return genInsertManyStatement(dst, table, f, &[]values{*v})
+}
+
+func genInsertManyStatement(dst *string, table string, f *fields, v *[]values) error {
+	var valuesArr []string
+	if len(table) == 0 {
+		return fmt.Errorf("empty table name")
+	}
+	if v == nil || len(*v) == 0 {
+		return fmt.Errorf("empty values")
+	}
+	for _, values := range *v {
+		valuesArr = append(valuesArr, genInsertVals(&values))
+	}
 	fields := ""
 	if f != nil && len(*f) > 0 {
 		fields = fmt.Sprintf("(%s)", strings.Join(*f, ", "))
 	}
-	sql := fmt.Sprintf("INSERT INTO %s %s VALUES %s", table, fields, values)
+	sql := fmt.Sprintf("INSERT INTO %s %s VALUES %s", table, fields, strings.Join(valuesArr, ", "))
 	*dst = sql
 	return nil
 }
@@ -131,7 +142,7 @@ func genUpdateStatement(dst *string, table string, f *fields, w *where) error {
 	return nil
 }
 
-func genDeleteStatement(dst *string, table string, w *where, l *limit) error {
+func genDeleteStatement(dst *string, table string, w *where) error {
 	if len(table) == 0 {
 		return fmt.Errorf("empty table name")
 	}
@@ -142,9 +153,6 @@ func genDeleteStatement(dst *string, table string, w *where, l *limit) error {
 			return err
 		}
 		sql = fmt.Sprintf("%s %s", sql, where)
-	}
-	if l != nil {
-		sql = fmt.Sprintf("%s LIMIT %d", sql, *l)
 	}
 	*dst = sql
 	return nil

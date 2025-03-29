@@ -24,10 +24,24 @@ func InternalServerError(msg string) Response {
 	}
 }
 
-func NotFuond(msg string) Response {
+func NotFound(msg string) Response {
 	return Response{
 		Msg:  "Not Found: " + msg,
 		Code: http.StatusNotFound,
+	}
+}
+
+func Found(msg string) Response {
+	return Response{
+		Msg:  "Found: " + msg,
+		Code: http.StatusFound,
+	}
+}
+
+func NoContent(msg string) Response {
+	return Response{
+		Msg:  "Found: " + msg,
+		Code: http.StatusNoContent,
 	}
 }
 

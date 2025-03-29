@@ -10,7 +10,7 @@ INSERT INTO message_status
 VALUES
 (0,'done'),
 (1,'new'),
-(2,'acive');
+(2,'active');
 
 DROP TABLE IF EXISTS publisher;
 CREATE TABLE publisher (

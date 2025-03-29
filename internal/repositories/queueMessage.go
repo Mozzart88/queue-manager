@@ -39,77 +39,77 @@ func (m *QueueMessage) StateName() string {
 	return m.stateName
 }
 
-func (m QueueMessage) setId(value any) error {
-	if id, ok := value.(int); ok {
-		m.id = id
+func (q *QueueMessage) setId(value any) error {
+	if id, ok := value.(int64); ok {
+		q.id = int(id)
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (m QueueMessage) setContent(value any) error {
+func (q *QueueMessage) setContent(value any) error {
 	if v, ok := value.(string); ok {
-		m.content = v
+		q.content = v
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (m QueueMessage) setPublisherId(value any) error {
-	if v, ok := value.(int); ok {
-		m.publisherId = v
+func (q *QueueMessage) setPublisherId(value any) error {
+	if v, ok := value.(int64); ok {
+		q.publisherId = int(v)
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (m QueueMessage) setPublisherName(value any) error {
+func (q *QueueMessage) setPublisherName(value any) error {
 	if v, ok := value.(string); ok {
-		m.publisherName = v
+		q.publisherName = v
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (m QueueMessage) setStateId(value any) error {
-	if v, ok := value.(int); ok {
-		m.stateId = v
+func (q *QueueMessage) setStateId(value any) error {
+	if v, ok := value.(int64); ok {
+		q.stateId = int(v)
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (m QueueMessage) setStateName(value any) error {
+func (q *QueueMessage) setStateName(value any) error {
 	if v, ok := value.(string); ok {
-		m.stateName = v
+		q.stateName = v
 	} else {
 		return fmt.Errorf("fail to assert type %v", value)
 	}
 	return nil
 }
 
-func (q QueueMessage) fillValues(row QueryRow) error {
+func (q *QueueMessage) fillValues(row QueryRow) error {
 	if err := q.setId(row["id"].value); err != nil {
 		return err
 	}
-	if err := q.setContent(row["content"].value); err != nil {
+	if err := q.setContent(row["msg"].value); err != nil {
 		return err
 	}
 	if err := q.setPublisherId(row["publisher_id"].value); err != nil {
 		return err
 	}
-	if err := q.setStateId(row["state_id"].value); err != nil {
+	if err := q.setStateId(row["status_id"].value); err != nil {
 		return err
 	}
 	if err := q.setPublisherName(row["publisher"].value); err != nil {
 		return err
 	}
-	if err := q.setStateName(row["state"].value); err != nil {
+	if err := q.setStateName(row["status"].value); err != nil {
 		return err
 	}
 	return nil
@@ -120,7 +120,7 @@ type oldest_t *bool
 func queueFields() fields {
 	return fields{
 		"id",
-		"content",
+		"msg",
 		"publisher_id",
 		"publisher",
 		"status_id",
@@ -128,15 +128,25 @@ func queueFields() fields {
 	}
 }
 
+func NewQueueMessage(id int, content string, publisherId int, publisherName string, stateId int, stateName string) *QueueMessage {
+	return &QueueMessage{
+		id,
+		content,
+		publisherId,
+		publisherName,
+		stateId,
+		stateName,
+	}
+}
+
 func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, error) {
-	var result QueueMessage
+	var result *QueueMessage = &QueueMessage{}
 	var w where = where{[]string{}, "AND"}
 	var f fields = queueFields()
-	var order order
+	var order = order{[]string{"id"}, "ASC"}
 
 	if o != nil && !*o {
-		order.fields = []string{"id"}
-		order.order = "ASC"
+		order.order = "DESC"
 	}
 
 	w.fields = append(w.fields, fmt.Sprintf("publisher = '%s'", publisher))
@@ -152,11 +162,11 @@ func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, er
 	if err := result.fillValues(res); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result, nil
 }
 
 func GetUniqQueueMessage(id int) (*QueueMessage, error) {
-	var result QueueMessage
+	var result = &QueueMessage{}
 	var w where = where{[]string{}, ""}
 	var f fields = queueFields()
 
@@ -172,18 +182,18 @@ func GetUniqQueueMessage(id int) (*QueueMessage, error) {
 	if err := result.fillValues(res); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result, nil
 }
 
 func GetMessages(publisher string, s State_t, o oldest_t) ([]QueueMessage, error) {
 	var result []QueueMessage
 	var w where = where{[]string{}, "AND"}
 	var f fields = queueFields()
-	var order order
+	var order = order{[]string{"id"}, "ASC"}
 
 	if o != nil && !*o {
 		order.fields = []string{"id"}
-		order.order = "ASC"
+		order.order = "DESC"
 	}
 
 	w.fields = append(w.fields, fmt.Sprintf("publisher = '%s'", publisher))
@@ -194,11 +204,11 @@ func GetMessages(publisher string, s State_t, o oldest_t) ([]QueueMessage, error
 		return nil, err
 	}
 	for _, msg := range res {
-		var m QueueMessage
+		var m = &QueueMessage{}
 		if err := m.fillValues(msg); err != nil {
 			return nil, err
 		}
-		result = append(result, m)
+		result = append(result, *m)
 	}
 	return result, nil
 }

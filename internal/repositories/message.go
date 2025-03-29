@@ -5,14 +5,13 @@ import "fmt"
 const messageTable = "message"
 
 func DeleteMessage(id int) error {
-	var l limit = 1
 	var w where = where{
 		[]string{},
 		"",
 	}
 	predicate := fmt.Sprintf("id = %d", id)
 	w.fields = append(w.fields, predicate)
-	_, err := delete(messageTable, &w, &l)
+	_, err := delete(messageTable, &w)
 	return err
 }
 
@@ -36,6 +35,16 @@ func UpdateStateMessage(id int, newState State_t) error {
 	return err
 }
 
+// set args publisherId, content
 func AddMessage(content string, publisherId int) (int, error) {
 	return insert(messageTable, &fields{"content", "publisher_id"}, &values{content, publisherId})
+}
+
+func AddMessages(publisherId int, msgs *[]string) (int, error) {
+	var v []values
+	for _, msg := range *msgs {
+		v = append(v, values{publisherId, msg})
+	}
+
+	return insertMany(messageTable, &fields{"content", "publisher_id"}, &v)
 }

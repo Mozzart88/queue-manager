@@ -17,6 +17,13 @@ func (p *Publisher) Name() string {
 	return p.name
 }
 
+func NewPublisher(id int, name string) *Publisher {
+	return &Publisher{
+		id,
+		name,
+	}
+}
+
 func GetPublisher(id *int, name *string) (*Publisher, error) {
 	var result Publisher
 	var w where = where{
@@ -35,7 +42,7 @@ func GetPublisher(id *int, name *string) (*Publisher, error) {
 		predicate := fmt.Sprintf("name = '%s'", *name)
 		w.fields = append(w.fields, predicate)
 	}
-	if len(w.fields) > 0 {
+	if len(w.fields) > 1 {
 		w.union = "and"
 	}
 
@@ -46,8 +53,8 @@ func GetPublisher(id *int, name *string) (*Publisher, error) {
 	if res == nil {
 		return nil, nil
 	}
-	if id, ok := res["id"].value.(int); ok {
-		result.id = id
+	if id, ok := res["id"].value.(int64); ok {
+		result.id = int(id)
 	} else {
 		return nil, fmt.Errorf("fail to assert type %v", res["id"].value)
 	}
@@ -60,7 +67,6 @@ func GetPublisher(id *int, name *string) (*Publisher, error) {
 }
 
 func DeletePublisher(id *int, name *string) error {
-	var l limit = 1
 	var w where = where{
 		[]string{},
 		"",
@@ -80,7 +86,7 @@ func DeletePublisher(id *int, name *string) error {
 	if len(w.fields) > 0 {
 		w.union = "and"
 	}
-	_, err := delete(publisherTable, &w, &l)
+	_, err := delete(publisherTable, &w)
 	return err
 }
 
@@ -97,5 +103,10 @@ func UpdatePublisher(id int, newName string) error {
 }
 
 func AddPublisher(name string) (int, error) {
+	if res, err := GetPublisher(nil, &name); err != nil {
+		return -1, err
+	} else if res != nil {
+		return res.id, nil
+	}
 	return insert(publisherTable, &fields{"name"}, &values{name})
 }
