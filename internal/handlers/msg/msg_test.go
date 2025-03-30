@@ -3,6 +3,7 @@ package msg
 import (
 	"expat-news/queue-manager/internal/db"
 	"io"
+	"net/http"
 	"net/url"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ func TestParseRequest_invalidJson(t *testing.T) {
 
 func TestParseRequest_nil_body_and_query(t *testing.T) {
 	var message db.Message
-	body := io.ReadCloser(nil)
+	body := http.NoBody
 	values := url.Values{}
 	err := parseRequest(&message, body, values)
 	if err == nil || err.Error() != "id parameter is mandatory" {
@@ -30,7 +31,7 @@ func TestParseRequest_nil_body_and_query(t *testing.T) {
 
 func TestParseRequest_query(t *testing.T) {
 	var message db.Message
-	body := io.ReadCloser(nil)
+	body := http.NoBody
 	values := url.Values{}
 	values.Add("id", "100")
 	err := parseRequest(&message, body, values)

@@ -2,7 +2,6 @@ package msg
 
 import (
 	"encoding/json"
-	"errors"
 	"expat-news/queue-manager/internal/db"
 	"expat-news/queue-manager/internal/utils"
 	httpServer "expat-news/queue-manager/pkg/utils/httpServer"
@@ -65,10 +64,15 @@ func get(msg *db.Message) httpServer.Response {
 }
 
 func parseRequest(msg *db.Message, body io.ReadCloser, query url.Values) error {
-	if body == nil {
+	defer body.Close()
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return err
+	}
+	if len(data) == 0 {
 		id := query.Get("id")
 		if id == "" {
-			return errors.New("id parameter is mandatory")
+			return fmt.Errorf("id parameter is mandatory")
 		}
 		value, err := strconv.Atoi(id)
 		if err != nil {
@@ -76,8 +80,7 @@ func parseRequest(msg *db.Message, body io.ReadCloser, query url.Values) error {
 		}
 		msg.Id = &value
 	} else {
-		defer body.Close()
-		if err := json.NewDecoder(body).Decode(msg); err != nil {
+		if err := json.Unmarshal(data, msg); err != nil {
 			return err
 		}
 	}
