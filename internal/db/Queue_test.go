@@ -1,3 +1,5 @@
+//go:guild integration
+
 package db_test
 
 import (
