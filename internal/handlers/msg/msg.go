@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/pkg/logger"
-	httpServer "expat-news/queue-manager/pkg/utils"
+	"expat-news/queue-manager/internal/utils"
+	httpServer "expat-news/queue-manager/pkg/utils/httpServer"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,21 +13,11 @@ import (
 	"strconv"
 )
 
-func send(w http.ResponseWriter, response httpServer.Response) {
-	httpServer.SendResponse(w, response)
-	logger.Message(fmt.Sprintf("%d %s", response.Code, response.Msg))
-}
-
-func sendError(w http.ResponseWriter, response httpServer.Response) {
-	httpServer.SendResponse(w, response)
-	logger.Error(fmt.Sprintf("%d %s", response.Code, response.Msg))
-}
-
 func insert(msg *db.Message) httpServer.Response {
 	if msg.Publisher == nil || msg.Msg == nil {
 		return httpServer.BadRequest("missing requiered fields - publisher and/or msg")
 	}
-	err := msg.Insert()
+	err := msg.Add()
 	if err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
@@ -39,18 +29,17 @@ func insert(msg *db.Message) httpServer.Response {
 }
 
 func updateState(msg *db.Message) httpServer.Response {
-	if msg.ID == nil || msg.State == nil {
+	if msg.Id == nil || msg.State == nil {
 		return httpServer.BadRequest("missing requiered fields - id and/or state")
 	}
-	err := msg.SetState()
-	if err != nil {
+	if err := msg.SetState(); err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
 	return httpServer.OK("ok")
 }
 
 func delete(msg *db.Message) httpServer.Response {
-	if msg.ID == nil {
+	if msg.Id == nil {
 		return httpServer.BadRequest("missing requiered fields - id")
 	}
 	err := msg.Delete()
@@ -65,8 +54,8 @@ func get(msg *db.Message) httpServer.Response {
 	if err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
-	if msg.ID != nil && msg.Msg == nil {
-		return httpServer.NotFuond(fmt.Sprintf("message with id %d in queue", *msg.ID))
+	if msg.Id != nil && msg.Msg == nil {
+		return httpServer.NotFound(fmt.Sprintf("message with id %d in queue", *msg.Id))
 	}
 	result, err := json.Marshal(*msg)
 	if err != nil {
@@ -85,7 +74,7 @@ func parseRequest(msg *db.Message, body io.ReadCloser, query url.Values) error {
 		if err != nil {
 			return err
 		}
-		msg.ID = &value
+		msg.Id = &value
 	} else {
 		defer body.Close()
 		if err := json.NewDecoder(body).Decode(msg); err != nil {
@@ -99,7 +88,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	var message db.Message
 	var response httpServer.Response
 	if err := parseRequest(&message, r.Body, r.URL.Query()); err != nil {
-		sendError(w, httpServer.BadRequest(err.Error()))
+		utils.SendError(w, httpServer.BadRequest(err.Error()))
 		return
 	}
 	if r.Method == http.MethodGet {
@@ -111,12 +100,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodDelete {
 		response = delete(&message)
 	} else {
-		sendError(w, httpServer.MethodNotAllowed(r.Method))
+		utils.SendError(w, httpServer.MethodNotAllowed(r.Method))
 		return
 	}
 	if response.Code >= 400 {
-		sendError(w, response)
+		utils.SendError(w, response)
 	} else {
-		send(w, response)
+		utils.Send(w, response)
 	}
 }
