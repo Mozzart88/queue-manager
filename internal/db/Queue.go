@@ -13,6 +13,8 @@ type Queue struct {
 func (q *Queue) GetMessages(oldest *bool) ([]Message, error) {
 	var result []Message
 
+	mu.Lock()
+	defer mu.Unlock()
 	res, err := repos.GetMessages(q.Publisher, q.State, oldest)
 	if err != nil {
 		return nil, err
@@ -28,6 +30,8 @@ func (q *Queue) GetMessages(oldest *bool) ([]Message, error) {
 func (q *Queue) GetMessage(oldest *bool) (*Message, error) {
 	var result Message
 
+	mu.Lock()
+	defer mu.Unlock()
 	msg, err := repos.GetQueueMessage(q.Publisher, q.State, oldest)
 	if err != nil {
 		return nil, err
@@ -41,6 +45,9 @@ func (q *Queue) GetMessage(oldest *bool) (*Message, error) {
 
 func (q *Queue) AddMessages(msgs *[]string) (int, error) {
 	var publisherId int
+
+	mu.Lock()
+	defer mu.Unlock()
 	publisher, err := repos.GetPublisher(nil, &q.Publisher)
 	if err != nil {
 		return 0, err

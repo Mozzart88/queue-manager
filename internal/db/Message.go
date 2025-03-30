@@ -82,6 +82,8 @@ func (m *Message) Add() error {
 	if m.Msg == nil || m.Publisher == nil {
 		return fmt.Errorf("required fields id and/or publisher are not defined")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	msg, err := repos.AddQueueMessage(*m.Msg, *m.Publisher)
 	if err != nil {
 		return err
@@ -97,6 +99,8 @@ func (m *Message) SetState() error {
 	if m.Id == nil || m.State == nil {
 		return fmt.Errorf("missing id and/or state")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	if err := repos.UpdateStateMessage(*m.Id, repos.State_t(*m.State)); err != nil {
 		return err
 	}
@@ -108,7 +112,6 @@ func (m *Message) SetActive() error {
 	if err := m.SetState(); err != nil {
 		return err
 	}
-	m.setState(string(repos.STATE_ACTIVE))
 	return nil
 }
 
@@ -117,7 +120,6 @@ func (m *Message) SetNew() error {
 	if err := m.SetState(); err != nil {
 		return err
 	}
-	m.setState(string(repos.STATE_NEW))
 	return nil
 }
 
@@ -129,6 +131,8 @@ func (m *Message) SetDone() error {
 	if m.Id == nil {
 		return fmt.Errorf("can't update state of unsaved message: id is nil")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	if err := repos.DeleteMessage(*m.Id); err != nil {
 		return err
 	}
@@ -141,6 +145,8 @@ func (m *Message) Get() error {
 	if m.Id == nil {
 		return fmt.Errorf("can't get message: id undefined")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	msg, err := repos.GetUniqQueueMessage(*m.Id)
 	if err != nil {
 		return err
@@ -156,6 +162,8 @@ func (m *Message) Delete() error {
 	if m.Id == nil {
 		return fmt.Errorf("can't delete unsaved message")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	if err := repos.DeleteMessage(*m.Id); err != nil {
 		return err
 	}

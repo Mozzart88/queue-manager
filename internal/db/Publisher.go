@@ -44,6 +44,8 @@ func (p Publisher) String() string {
 }
 
 func (p *Publisher) Get() error {
+	mu.Lock()
+	defer mu.Unlock()
 	data, err := repos.GetPublisher(p.Id, p.Name)
 	if err != nil {
 		return err
@@ -60,6 +62,8 @@ func (p *Publisher) Update(newName string) error {
 	if p.Id == nil {
 		return fmt.Errorf("id is undefined")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	if err := repos.UpdatePublisher(*p.Id, newName); err != nil {
 		return err
 	}
@@ -68,6 +72,8 @@ func (p *Publisher) Update(newName string) error {
 }
 
 func (p *Publisher) Delete() error {
+	mu.Lock()
+	defer mu.Unlock()
 	if err := repos.DeletePublisher(p.Id, p.Name); err != nil {
 		return err
 	}
@@ -80,6 +86,8 @@ func (p *Publisher) Register() error {
 	if p.Name == nil {
 		return fmt.Errorf("name is undefined")
 	}
+	mu.Lock()
+	defer mu.Unlock()
 	id, err := repos.AddPublisher(*p.Name)
 	if err != nil {
 		return err

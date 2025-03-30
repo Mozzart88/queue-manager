@@ -12,6 +12,8 @@ type State struct {
 }
 
 func (s *State) Get() error {
+	mu.Lock()
+	defer mu.Unlock()
 	state, err := repos.GetState(s.Id, (*repos.State_t)(s.Name))
 	if err != nil {
 		return err
