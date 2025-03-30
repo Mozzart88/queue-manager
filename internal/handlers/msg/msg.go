@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/services/utils"
-	httpServer "expat-news/queue-manager/pkg/utils"
+	"expat-news/queue-manager/internal/utils"
+	httpServer "expat-news/queue-manager/pkg/utils/httpServer"
 	"fmt"
 	"io"
 	"net/http"
@@ -29,7 +29,7 @@ func insert(msg *db.Message) httpServer.Response {
 }
 
 func updateState(msg *db.Message) httpServer.Response {
-	if msg.ID == nil || msg.State == nil {
+	if msg.Id == nil || msg.State == nil {
 		return httpServer.BadRequest("missing requiered fields - id and/or state")
 	}
 	if err := msg.SetState(); err != nil {
@@ -39,7 +39,7 @@ func updateState(msg *db.Message) httpServer.Response {
 }
 
 func delete(msg *db.Message) httpServer.Response {
-	if msg.ID == nil {
+	if msg.Id == nil {
 		return httpServer.BadRequest("missing requiered fields - id")
 	}
 	err := msg.Delete()
@@ -54,8 +54,8 @@ func get(msg *db.Message) httpServer.Response {
 	if err != nil {
 		return httpServer.InternalServerError(err.Error())
 	}
-	if msg.ID != nil && msg.Msg == nil {
-		return httpServer.NotFound(fmt.Sprintf("message with id %d in queue", *msg.ID))
+	if msg.Id != nil && msg.Msg == nil {
+		return httpServer.NotFound(fmt.Sprintf("message with id %d in queue", *msg.Id))
 	}
 	result, err := json.Marshal(*msg)
 	if err != nil {
@@ -74,7 +74,7 @@ func parseRequest(msg *db.Message, body io.ReadCloser, query url.Values) error {
 		if err != nil {
 			return err
 		}
-		msg.ID = &value
+		msg.Id = &value
 	} else {
 		defer body.Close()
 		if err := json.NewDecoder(body).Decode(msg); err != nil {

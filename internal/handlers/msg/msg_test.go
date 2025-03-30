@@ -38,8 +38,8 @@ func TestParseRequest_query(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 	const expected = 100
-	if *message.ID != expected {
-		t.Errorf("expected: %v, got: %v", expected, *message.ID)
+	if *message.Id != expected {
+		t.Errorf("expected: %v, got: %v", expected, *message.Id)
 	}
 }
 
@@ -52,8 +52,8 @@ func TestParseRequest_body(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 	const expected = 100
-	if *message.ID != expected {
-		t.Errorf("expected: %v, got: %v", expected, *message.ID)
+	if *message.Id != expected {
+		t.Errorf("expected: %v, got: %v", expected, *message.Id)
 	}
 }
 
@@ -67,7 +67,7 @@ func TestParseRequest_body_and_values(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 	const expected = 100
-	if *message.ID != expected {
-		t.Errorf("expected: %v, got: %v", expected, *message.ID)
+	if *message.Id != expected {
+		t.Errorf("expected: %v, got: %v", expected, *message.Id)
 	}
 }
