@@ -2,10 +2,9 @@ package publisher
 
 import (
 	"encoding/json"
-	"errors"
 	"expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/services/utils"
-	httpServer "expat-news/queue-manager/pkg/utils"
+	"expat-news/queue-manager/internal/utils"
+	httpServer "expat-news/queue-manager/pkg/utils/httpServer"
 	"fmt"
 	"io"
 	"net/http"
@@ -65,12 +64,16 @@ func get(publisher *db.Publisher) httpServer.Response {
 }
 
 func parseRequest(publisher *db.Publisher, body io.ReadCloser, query url.Values) error {
-	if body == nil {
+	defer body.Close()
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return err
+	}
+	if len(data) == 0 {
 		id := query.Get("id")
 		name := query.Get("name")
-
-		if id == "" || name == "" {
-			return errors.New("missing parameter id and/or name")
+		if id == "" && name == "" {
+			return fmt.Errorf("missing parameter id and name")
 		}
 		if id != "" {
 			value, err := strconv.Atoi(id)
@@ -83,8 +86,7 @@ func parseRequest(publisher *db.Publisher, body io.ReadCloser, query url.Values)
 			publisher.Name = &name
 		}
 	} else {
-		defer body.Close()
-		if err := json.NewDecoder(body).Decode(publisher); err != nil {
+		if err := json.Unmarshal(data, publisher); err != nil {
 			return err
 		}
 	}
