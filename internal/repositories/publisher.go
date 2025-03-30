@@ -86,8 +86,20 @@ func DeletePublisher(id *int, name *string) error {
 	if len(w.fields) > 0 {
 		w.union = "and"
 	}
-	_, err := delete(publisherTable, &w)
-	return err
+	affected, err := delete(publisherTable, &w)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		var idStr string
+		if id == nil {
+			idStr = "nil"
+		} else {
+			idStr = fmt.Sprintf("%d", *id)
+		}
+		return fmt.Errorf("unregistered publisher with id: %s and name: %s", idStr, *name)
+	}
+	return nil
 }
 
 func UpdatePublisher(id int, newName string) error {
@@ -98,7 +110,13 @@ func UpdatePublisher(id int, newName string) error {
 	var f = fields{
 		fmt.Sprintf("name = '%s'", newName),
 	}
-	_, err := update(publisherTable, &f, &w)
+	affected, err := update(publisherTable, &f, &w)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("unregistered publisher with id: %d and name: %s", id, newName)
+	}
 	return err
 }
 

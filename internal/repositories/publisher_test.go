@@ -4,6 +4,7 @@ package repos_test
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"strings"
 	"testing"
 )
 
@@ -177,7 +178,7 @@ func TestDeletePublisher(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if err := repos.DeletePublisher(test.id, test.name); err != nil {
+		if err := repos.DeletePublisher(test.id, test.name); err != nil && !strings.HasPrefix(err.Error(), "unregistered publisher with id") {
 			t.Errorf("error occured: %v", err)
 			continue
 		}
