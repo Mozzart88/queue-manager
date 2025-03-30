@@ -2,21 +2,80 @@ package db
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/pkg/utils"
 	"fmt"
 )
 
 type Message struct {
-	ID        *int    `json:"id,omitempty"`
+	Id        *int    `json:"id,omitempty"`
 	Publisher *string `json:"publisher,omitempty"`
 	Msg       *string `json:"msg,omitempty"`
 	State     *string `json:"state,omitempty"`
 }
 
+func (m *Message) setId(v int) {
+	if m.Id == nil {
+		m.Id = utils.Ptr(v)
+	} else {
+		*m.Id = v
+	}
+}
+
+func (m *Message) setPublisher(v string) {
+	if m.Publisher == nil {
+		m.Publisher = utils.Ptr(v)
+	} else {
+		*m.Publisher = v
+	}
+}
+
+func (m *Message) setMsg(v string) {
+	if m.Msg == nil {
+		m.Msg = utils.Ptr(v)
+	} else {
+		*m.Msg = v
+	}
+}
+
+func (m *Message) setState(v string) {
+	if m.State == nil {
+		m.State = utils.Ptr(v)
+	} else {
+		*m.State = v
+	}
+}
+
+func (m Message) String() string {
+	var id, msg, publisher, state string
+
+	if m.Id == nil {
+		id = "nil"
+	} else {
+		id = fmt.Sprintf("%d", *m.Id)
+	}
+	if m.Msg == nil {
+		msg = "nil"
+	} else {
+		msg = *m.Msg
+	}
+	if m.Publisher == nil {
+		publisher = "nil"
+	} else {
+		publisher = *m.Publisher
+	}
+	if m.State == nil {
+		state = "nil"
+	} else {
+		state = *m.State
+	}
+	return fmt.Sprintf("Publisher{%s %s %s %s}", id, msg, publisher, state)
+}
+
 func (m *Message) fillValues(data *repos.QueueMessage) {
-	*m.ID = data.ID()
-	*m.Publisher = data.PublisherName()
-	*m.Msg = data.Content()
-	*m.State = data.StateName()
+	m.setId(data.ID())
+	m.setPublisher(data.PublisherName())
+	m.setMsg(data.Content())
+	m.setState(data.StateName())
 }
 
 func (m *Message) Add() error {
@@ -35,34 +94,30 @@ func (m *Message) Add() error {
 }
 
 func (m *Message) SetState() error {
-	if m.ID == nil || m.State == nil {
+	if m.Id == nil || m.State == nil {
 		return fmt.Errorf("missing id and/or state")
 	}
-	if err := repos.UpdateStateMessage(*m.ID, repos.State_t(*m.State)); err != nil {
+	if err := repos.UpdateStateMessage(*m.Id, repos.State_t(*m.State)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (m *Message) SetActive() error {
-	if m.ID == nil {
-		return fmt.Errorf("can't update state of unsaved message")
-	}
-	if err := repos.UpdateStateMessage(*m.ID, repos.STATE_ACTIVE); err != nil {
+	m.setState(string(repos.STATE_ACTIVE))
+	if err := m.SetState(); err != nil {
 		return err
 	}
-	*m.State = (string)(repos.STATE_ACTIVE)
+	m.setState(string(repos.STATE_ACTIVE))
 	return nil
 }
 
 func (m *Message) SetNew() error {
-	if m.ID == nil {
-		return fmt.Errorf("can't update state of unsaved message")
-	}
-	if err := repos.UpdateStateMessage(*m.ID, repos.STATE_NEW); err != nil {
+	m.setState(string(repos.STATE_NEW))
+	if err := m.SetState(); err != nil {
 		return err
 	}
-	*m.State = (string)(repos.STATE_NEW)
+	m.setState(string(repos.STATE_NEW))
 	return nil
 }
 
@@ -71,40 +126,42 @@ func (m *Message) Rollback() error {
 }
 
 func (m *Message) SetDone() error {
-	if m.ID == nil {
-		return fmt.Errorf("can't update state of unsaved message")
+	if m.Id == nil {
+		return fmt.Errorf("can't update state of unsaved message: id is nil")
 	}
-	if err := repos.DeleteMessage(*m.ID); err != nil {
+	if err := repos.DeleteMessage(*m.Id); err != nil {
 		return err
 	}
-	*m.State = (string)(repos.STATE_DONE)
-	m.ID = nil
+	m.setState((string)(repos.STATE_DONE))
+	m.Id = nil
 	return nil
 }
 
 func (m *Message) Get() error {
-	if m.ID == nil {
+	if m.Id == nil {
 		return fmt.Errorf("can't get message: id undefined")
 	}
-	msg, err := repos.GetUniqQueueMessage(*m.ID)
+	msg, err := repos.GetUniqQueueMessage(*m.Id)
 	if err != nil {
 		return err
 	}
 	if msg == nil {
-		return fmt.Errorf("no message in queue with specified id: %d", *m.ID)
+		return fmt.Errorf("no message in queue with specified id: %d", *m.Id)
 	}
 	m.fillValues(msg)
 	return nil
 }
 
 func (m *Message) Delete() error {
-	if m.ID == nil {
+	if m.Id == nil {
 		return fmt.Errorf("can't delete unsaved message")
 	}
-	if err := repos.DeleteMessage(*m.ID); err != nil {
+	if err := repos.DeleteMessage(*m.Id); err != nil {
 		return err
 	}
 	m.State = nil
-	m.ID = nil
+	m.Publisher = nil
+	m.Msg = nil
+	m.Id = nil
 	return nil
 }
