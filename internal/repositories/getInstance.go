@@ -2,6 +2,7 @@ package repos
 
 import (
 	"database/sql"
+	"expat-news/queue-manager/pkg/logger"
 	"log"
 	"os"
 	"sync"
@@ -21,6 +22,7 @@ func GetDBInstance() *sql.DB {
 		file, exist := os.LookupEnv(env)
 		if !exist || len(file) == 0 {
 			file = ":memory:"
+			logger.Message("DB runs in memory")
 		}
 		db, err = sql.Open("sqlite3", file)
 		if err != nil {

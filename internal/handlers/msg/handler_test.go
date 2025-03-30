@@ -1,3 +1,5 @@
+//go:build integration
+
 package msg_test
 
 import (

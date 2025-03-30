@@ -39,10 +39,15 @@ func loadDBFile(filename string) error {
 }
 
 func SetupDB(t *testing.T) {
-	if err := loadDBFile("../../data/schema.sql"); err != nil {
+	const env = "QDB_DIR"
+	dataDir, exist := os.LookupEnv(env)
+	if !exist || len(dataDir) == 0 {
+		t.Fatal("undefined QDB_DIR env variable")
+	}
+	if err := loadDBFile(dataDir + "/schema.sql"); err != nil {
 		t.Fatalf("fail to prepare database: %v", err)
 	}
-	if err := loadDBFile("../../data/test_data.sql"); err != nil {
+	if err := loadDBFile(dataDir + "/test_data.sql"); err != nil {
 		t.Fatalf("fail to prepare database: %v", err)
 	}
 }

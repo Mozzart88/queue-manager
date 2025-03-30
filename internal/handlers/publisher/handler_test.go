@@ -1,3 +1,4 @@
+//go:build integration
 package publisher_test
 
 import (
