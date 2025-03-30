@@ -8,9 +8,9 @@ CREATE TABLE message_status (
 
 INSERT INTO message_status
 VALUES
-(0,'DONE'),
-(1,'NEW'),
-(2,'PROCESSING');
+(0,'done'),
+(1,'new'),
+(2,'active');
 
 DROP TABLE IF EXISTS publisher;
 CREATE TABLE publisher (

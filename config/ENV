@@ -1,0 +1,3 @@
+export APP_DIR=$HOME/projects/queue-manager
+export QDB_DIR=$APP_DIR/data
+export QDB_FILE=$QDB_DIR/data.db
