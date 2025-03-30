@@ -13,6 +13,38 @@ func execSql(sql string) (sql.Result, error) {
 	return res, nil
 }
 
+func beginTx() error {
+	_, err := execSql("BEGIN TRANSACTION")
+	return err
+}
+
+func commitTx() error {
+	_, err := execSql("COMMIT")
+	return err
+}
+
+func rollbackTx() error {
+	_, err := execSql("ROLLBACK")
+	return err
+}
+
+func tx(callback func() (int, error)) (int, error) {
+	if err := beginTx(); err != nil {
+		return 0, err
+	}
+	val, err := callback()
+	if err != nil {
+		if err := rollbackTx(); err != nil {
+			return 0, err
+		}
+		return 0, err
+	}
+	if err := commitTx(); err != nil {
+		return 0, err
+	}
+	return val, nil
+}
+
 func insert(table string, f *fields, v *values) (int, error) {
 	var sql string
 	if err := genInsertStatement(&sql, table, f, v); err != nil {
