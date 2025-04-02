@@ -48,7 +48,6 @@ func UpdateStateMessage(id int, newState State_t) error {
 	return err
 }
 
-// set args publisherId, content
 func AddMessage(content string, publisherId int) (int, error) {
 	return insert(messageTable, &fields{"content", "publisher_id"}, &values{content, publisherId})
 }
@@ -56,7 +55,7 @@ func AddMessage(content string, publisherId int) (int, error) {
 func AddMessages(publisherId int, msgs *[]string) (int, error) {
 	var v []values
 	for _, msg := range *msgs {
-		v = append(v, values{publisherId, msg})
+		v = append(v, values{msg, publisherId})
 	}
 
 	return insertMany(messageTable, &fields{"content", "publisher_id"}, &v)
