@@ -1,4 +1,5 @@
 //go:build integration
+
 package publisher_test
 
 import (
@@ -35,6 +36,9 @@ func test_handler_body_eq(a, b httpServer.Response) bool {
 func TestHandler(t *testing.T) {
 	const target = "/publisher"
 	test_utils.SetupDB(t)
+	onLogging := test_utils.SuppressLogging()
+	defer onLogging()
+
 	tests := []struct {
 		req        *http.Request
 		expected   *expected
@@ -118,6 +122,21 @@ func TestHandler(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			httptest.NewRequest(
+				http.MethodDelete,
+				target,
+				bytes.NewBufferString(`{"id":256}`),
+			),
+			&expected{
+				http.StatusNotFound,
+				httpServer.Response{
+					Msg:  `Not Found: unregistered publisher with id: 256 and name: nil`,
+					Code: http.StatusNotFound,
+				},
+			},
+			nil,
+		},
 	}
 
 	for i, test := range tests {
@@ -127,16 +146,16 @@ func TestHandler(t *testing.T) {
 		res := w.Result()
 		if res.StatusCode != test.expected.status {
 			body, _ := io.ReadAll(res.Body)
-			t.Errorf("test %d: status codes mismatch - expected %d, got %d\nbody:\n%s", i, test.expected.status, res.StatusCode, string(body))
+			test_utils.Fail(t, i, "status codes mismatch - expected %d, got %d\nbody:\n%s", test.expected.status, res.StatusCode, string(body))
 			continue
 		}
 		var actual httpServer.Response
 		if err := json.NewDecoder(res.Body).Decode(&actual); err != nil {
-			t.Errorf("test %d: unexpected error occured while decoding json: %v", i, err)
+			test_utils.Fail(t, i, "unexpected error occured while decoding json: %v", err)
 			continue
 		}
 		if !test_handler_body_eq(actual, test.expected.body) {
-			t.Errorf("test %d: body mismatch - expected\n%v\ngot\n%v", i, test.expected.body, actual)
+			test_utils.Fail(t, i, "body mismatch - expected\n%v\ngot\n%v", test.expected.body, actual)
 			continue
 		}
 	}
