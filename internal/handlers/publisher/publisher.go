@@ -32,7 +32,11 @@ func rename(publisher *db.Publisher) httpServer.Response {
 		return httpServer.BadRequest("missing requiered fields: id and/or name")
 	}
 	if err := publisher.Update(*publisher.Name); err != nil {
-		return httpServer.InternalServerError(err.Error())
+		if ok := strings.HasPrefix(err.Error(), "unregistered publisher"); ok {
+			return httpServer.NotFound(err.Error())
+		} else {
+			return httpServer.InternalServerError(err.Error())
+		}
 	}
 	return httpServer.OK("ok")
 }

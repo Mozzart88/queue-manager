@@ -199,8 +199,23 @@ func TestHandler_negative(t *testing.T) {
 			&expected{
 				http.StatusNotFound,
 				httpServer.Response{
-					Msg:  `Not Found: unregistered publisher with id: 256 and name: some`,
+					Msg:  `Not Found: unregistered publisher`,
 					Code: http.StatusNotFound,
+				},
+			},
+			nil,
+		},
+		{
+			httptest.NewRequest(
+				http.MethodPatch,
+				target,
+				bytes.NewBufferString(`{"id":1}`),
+			),
+			&expected{
+				http.StatusBadRequest,
+				httpServer.Response{
+					Msg:  `Bad Request:`,
+					Code: http.StatusBadRequest,
 				},
 			},
 			nil,
