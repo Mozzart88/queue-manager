@@ -14,7 +14,7 @@ import (
 )
 
 func register(publisher *db.Publisher) httpServer.Response {
-	if publisher.Name == nil {
+	if publisher.Name == nil || len(*publisher.Name) == 0 {
 		return httpServer.BadRequest("missing required field: name")
 	}
 	if err := publisher.Register(); err != nil {

@@ -191,6 +191,17 @@ func TestHandler_negative(t *testing.T) {
 			nil,
 		},
 		{
+			httptest.NewRequest(http.MethodPost, target, bytes.NewBufferString(`{"name":""}`)),
+			&expected{
+				http.StatusBadRequest,
+				httpServer.Response{
+					Msg:  `Bad Request:`,
+					Code: http.StatusBadRequest,
+				},
+			},
+			nil,
+		},
+		{
 			httptest.NewRequest(
 				http.MethodPatch,
 				target,
