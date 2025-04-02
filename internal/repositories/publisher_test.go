@@ -4,14 +4,14 @@ package repos_test
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/internal/test_utils"
+	"expat-news/queue-manager/pkg/utils"
 	"strings"
 	"testing"
 )
 
 func TestGetPublisher(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       *int
@@ -20,54 +20,52 @@ func TestGetPublisher(t *testing.T) {
 	}{
 		{
 			nil,
-			ptr("perfil"),
+			utils.Ptr("perfil"),
 			repos.NewPublisher(2, "perfil"),
 		},
 		{
-			ptr(1),
+			utils.Ptr(1),
 			nil,
 			repos.NewPublisher(1, "pagina12"),
 		},
 		{
-			ptr(2),
-			ptr("perfil"),
+			utils.Ptr(2),
+			utils.Ptr("perfil"),
 			repos.NewPublisher(2, "perfil"),
 		},
 		{
-			ptr(1),
-			ptr("perfil"),
+			utils.Ptr(1),
+			utils.Ptr("perfil"),
 			nil,
 		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		actual, err := repos.GetPublisher(test.id, test.name)
 		if err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		if test.expected == nil && actual != test.expected {
-			t.Errorf("expected nil, got: %v", actual)
+			test_utils.Fail(t, i, "expected nil, got: %v", actual)
 			continue
 		}
 		if actual == nil {
 			continue
 		}
 		if actual.ID() != test.expected.ID() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 		if actual.Name() != test.expected.Name() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 	}
 }
 
 func TestAddPublisher(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	test_utils.SetupDB(t)
 
 	tests := []struct {
 		name     string
@@ -79,39 +77,37 @@ func TestAddPublisher(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		newId, err := repos.AddPublisher(test.name)
 		if err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		actual, err := repos.GetPublisher(&newId, nil)
 		if err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		if test.expected == nil && actual != test.expected {
-			t.Errorf("expected nil, got: %v", actual)
+			test_utils.Fail(t, i, "expected nil, got: %v", actual)
 			continue
 		}
 		if actual == nil {
 			continue
 		}
 		if actual.ID() != test.expected.ID() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 		if actual.Name() != test.expected.Name() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 	}
 }
 
 func TestUpdatePublisher(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       int
@@ -125,35 +121,33 @@ func TestUpdatePublisher(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		if err := repos.UpdatePublisher(test.id, test.name); err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		actual, err := repos.GetPublisher(&test.id, &test.name)
 		if err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		if actual == nil {
-			t.Errorf("expected %v, got: nil", *test.expected)
+			test_utils.Fail(t, i, "expected %v, got: nil", *test.expected)
 			continue
 		}
 		if actual.ID() != test.expected.ID() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 		if actual.Name() != test.expected.Name() {
-			t.Errorf("expected\n%v\ngot\n%v", test.expected, actual)
+			test_utils.Fail(t, i, "expected\n%v\ngot\n%v", test.expected, actual)
 			continue
 		}
 	}
 }
 
 func TestDeletePublisher(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	test_utils.SetupDB(t)
 
 	tests := []struct {
 		id   *int
@@ -161,35 +155,76 @@ func TestDeletePublisher(t *testing.T) {
 	}{
 		{
 			nil,
-			ptr("perfil"),
+			utils.Ptr("perfil"),
 		},
 		{
-			ptr(1),
+			utils.Ptr(1),
 			nil,
 		},
 		{
-			ptr(2),
-			ptr("perfil"),
+			utils.Ptr(2),
+			utils.Ptr("perfil"),
 		},
 		{
-			ptr(1),
-			ptr("perfil"),
+			utils.Ptr(1),
+			utils.Ptr("perfil"),
 		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		if err := repos.DeletePublisher(test.id, test.name); err != nil && !strings.HasPrefix(err.Error(), "unregistered publisher with id") {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		actual, err := repos.GetPublisher(test.id, test.name)
 		if err != nil {
-			t.Errorf("error occured: %v", err)
+			test_utils.Fail(t, i, "error occured: %v", err)
 			continue
 		}
 		if actual != nil {
-			t.Errorf("expected nil, got: %v", actual)
+			test_utils.Fail(t, i, "expected nil, got: %v", actual)
 			continue
+		}
+	}
+}
+
+type whantError struct {
+	errMsg string
+}
+
+func TestDeletePublisher_negative(t *testing.T) {
+	test_utils.SetupDB(t)
+
+	tests := []struct {
+		id         *int
+		name       *string
+		whantError whantError
+	}{
+		{
+			nil,
+			utils.Ptr("perfi"),
+			whantError{"unregistered publisher with id: nil and name: perfi"},
+		},
+		{
+			utils.Ptr(256),
+			nil,
+			whantError{"unregistered publisher with id: 256 and name: nil"},
+		},
+		{
+			nil,
+			nil,
+			whantError{"empty id and name"},
+		},
+	}
+
+	for i, test := range tests {
+		err := repos.DeletePublisher(test.id, test.name)
+		if err == nil {
+			test_utils.Fail(t, i, "expected error, got nil", i)
+			continue
+		}
+		if err.Error() != test.whantError.errMsg {
+			test_utils.Fail(t, i, "expected error mssage:\n%s\ngot\n%s", test.whantError.errMsg, err.Error())
 		}
 	}
 }
