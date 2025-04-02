@@ -1,0 +1,6 @@
+*ocker*
+data.db
+config
+.git*
+*.md
+api/
