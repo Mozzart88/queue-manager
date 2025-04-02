@@ -31,7 +31,7 @@ func get(q *db.Queue) httpServer.Response {
 		return httpServer.InternalServerError(err.Error())
 	}
 	if len(msgs) == 0 {
-		return httpServer.NoContent("empty result")
+		return httpServer.NotFound("empty result")
 	}
 	result, err := json.Marshal(msgs)
 	if err != nil {
