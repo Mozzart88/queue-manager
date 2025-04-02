@@ -56,6 +56,9 @@ func get(publisher *db.Publisher) httpServer.Response {
 		return httpServer.BadRequest("missing required fields: id and name")
 	}
 	if err := publisher.Get(); err != nil {
+		if ok := strings.HasPrefix(err.Error(), "unregistered publisher"); ok {
+			return httpServer.NotFound(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	if publisher.Id == nil || publisher.Name == nil {
