@@ -92,12 +92,18 @@ func DeletePublisher(id *int, name *string) error {
 	}
 	if affected == 0 {
 		var idStr string
+		var nameStr string
 		if id == nil {
 			idStr = "nil"
 		} else {
 			idStr = fmt.Sprintf("%d", *id)
 		}
-		return fmt.Errorf("unregistered publisher with id: %s and name: %s", idStr, *name)
+		if name == nil {
+			nameStr = "nil"
+		} else {
+			nameStr = *name
+		}
+		return fmt.Errorf("unregistered publisher with id: %s and name: %s", idStr, nameStr)
 	}
 	return nil
 }
