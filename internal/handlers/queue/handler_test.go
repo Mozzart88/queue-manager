@@ -36,6 +36,9 @@ func test_handler_body_eq(a, b httpServer.Response) bool {
 func TestHandler(t *testing.T) {
 	const target = "/queue"
 	test_utils.SetupDB(t)
+	onLogging := test_utils.SuppressLogging()
+	defer onLogging()
+
 	tests := []struct {
 		req        *http.Request
 		expected   *expected
