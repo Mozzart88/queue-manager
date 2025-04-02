@@ -13,7 +13,7 @@ var (
 
 func getErrorLogger() *log.Logger {
 	once.Do(func() {
-		errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+		errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime)
 	})
 	return errorLogger
 }
