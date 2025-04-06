@@ -53,6 +53,9 @@ func delete(msg *db.Message) httpServer.Response {
 	}
 	err := msg.Delete()
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "no message with id:") {
+			return httpServer.NotFound(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	return httpServer.OK("ok")

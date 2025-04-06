@@ -213,13 +213,13 @@ func TestHandler_negative(t *testing.T) {
 			httptest.NewRequest(
 				http.MethodDelete,
 				target,
-				bytes.NewBufferString(`{"id":1}`),
+				bytes.NewBufferString(`{"id":256}`),
 			),
 			&expected{
-				http.StatusOK,
+				http.StatusNotFound,
 				httpServer.Response{
-					Msg:  `ok`,
-					Code: http.StatusOK,
+					Msg:  `Not Found:`,
+					Code: http.StatusNotFound,
 				},
 			},
 			nil,
