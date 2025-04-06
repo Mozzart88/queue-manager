@@ -39,6 +39,9 @@ func updateState(msg *db.Message) httpServer.Response {
 		if strings.HasPrefix(err.Error(), "invalid state:") {
 			return httpServer.BadRequest(err.Error())
 		}
+		if strings.HasPrefix(err.Error(), "no message with id:") {
+			return httpServer.NotFound(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	return httpServer.OK("ok")

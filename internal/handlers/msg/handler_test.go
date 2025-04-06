@@ -196,6 +196,21 @@ func TestHandler_negative(t *testing.T) {
 		},
 		{
 			httptest.NewRequest(
+				http.MethodPatch,
+				target,
+				bytes.NewBufferString(`{"id":256,"state":"new"}`),
+			),
+			&expected{
+				http.StatusNotFound,
+				httpServer.Response{
+					Msg:  `Not Found:`,
+					Code: http.StatusNotFound,
+				},
+			},
+			nil,
+		},
+		{
+			httptest.NewRequest(
 				http.MethodDelete,
 				target,
 				bytes.NewBufferString(`{"id":1}`),
