@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 func insert(msg *db.Message) httpServer.Response {
@@ -51,6 +52,9 @@ func delete(msg *db.Message) httpServer.Response {
 func get(msg *db.Message) httpServer.Response {
 	err := msg.Get()
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "no message in queue with specified id") {
+			return httpServer.NotFound(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	if msg.Id != nil && msg.Msg == nil {
