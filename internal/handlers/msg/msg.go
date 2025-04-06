@@ -19,6 +19,9 @@ func insert(msg *db.Message) httpServer.Response {
 	}
 	err := msg.Add()
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "unregistered publisher") {
+			return httpServer.BadRequest(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	result, err := json.Marshal(*msg)

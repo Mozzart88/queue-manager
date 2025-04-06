@@ -124,7 +124,8 @@ func TestHandler(t *testing.T) {
 func TestHandler_negative(t *testing.T) {
 	const target = "/msg"
 	test_utils.SetupDB(t)
-	test_utils.SuppressLogging()
+	releaseSuppress := test_utils.SuppressLogging()
+	defer releaseSuppress()
 	tests := []struct {
 		req        *http.Request
 		expected   *expected
@@ -167,13 +168,13 @@ func TestHandler_negative(t *testing.T) {
 			httptest.NewRequest(
 				http.MethodPost,
 				target,
-				bytes.NewBufferString(`{"publisher":"pagina12","msg":"some new msg"}`),
+				bytes.NewBufferString(`{"publisher":"pagina1","msg":"some new msg"}`),
 			),
 			&expected{
-				http.StatusCreated,
+				http.StatusBadRequest,
 				httpServer.Response{
-					Msg:  `{"id":7,"publisher":"pagina12","msg":"some new msg","state":"new"}`,
-					Code: http.StatusCreated,
+					Msg:  `Bad Request:`,
+					Code: http.StatusBadRequest,
 				},
 			},
 			nil,
