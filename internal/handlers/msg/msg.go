@@ -36,6 +36,9 @@ func updateState(msg *db.Message) httpServer.Response {
 		return httpServer.BadRequest("missing requiered fields - id and/or state")
 	}
 	if err := msg.SetState(); err != nil {
+		if strings.HasPrefix(err.Error(), "invalid state:") {
+			return httpServer.BadRequest(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	return httpServer.OK("ok")
