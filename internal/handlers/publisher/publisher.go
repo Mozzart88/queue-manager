@@ -18,6 +18,9 @@ func register(publisher *db.Publisher) httpServer.Response {
 		return httpServer.BadRequest("missing required field: name")
 	}
 	if err := publisher.Register(); err != nil {
+		if strings.HasPrefix(err.Error(), "already exists") {
+			return httpServer.Found(err.Error())
+		}
 		return httpServer.InternalServerError(err.Error())
 	}
 	result, err := json.Marshal(publisher)

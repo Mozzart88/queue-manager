@@ -4,6 +4,7 @@ import (
 	repos "expat-news/queue-manager/internal/repositories"
 	"expat-news/queue-manager/pkg/utils"
 	"fmt"
+	"strings"
 )
 
 type Publisher struct {
@@ -90,6 +91,9 @@ func (p *Publisher) Register() error {
 	defer mu.Unlock()
 	id, err := repos.AddPublisher(*p.Name)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "already exists") {
+			p.setId(id)
+		}
 		return err
 	}
 	p.setId(id)
