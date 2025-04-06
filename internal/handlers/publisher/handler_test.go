@@ -202,6 +202,17 @@ func TestHandler_negative(t *testing.T) {
 			nil,
 		},
 		{
+			httptest.NewRequest(http.MethodPost, target, bytes.NewBufferString(`{"name":"pagina12"}`)),
+			&expected{
+				http.StatusFound,
+				httpServer.Response{
+					Msg:  `Found:`,
+					Code: http.StatusFound,
+				},
+			},
+			nil,
+		},
+		{
 			httptest.NewRequest(
 				http.MethodPatch,
 				target,

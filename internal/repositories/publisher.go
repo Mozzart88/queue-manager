@@ -130,7 +130,7 @@ func AddPublisher(name string) (int, error) {
 	if res, err := GetPublisher(nil, &name); err != nil {
 		return -1, err
 	} else if res != nil {
-		return res.id, nil
+		return res.id, fmt.Errorf("already exists")
 	}
 	return insert(publisherTable, &fields{"name"}, &values{name})
 }
