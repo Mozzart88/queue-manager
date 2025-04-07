@@ -1,0 +1,177 @@
+openapi: 3.1.1
+info:
+  title: Message API
+  description: API for managing messages
+  version: 1.0.0
+
+paths:
+  /msg:
+    get:
+      summary: Retrieve oldest unprocessed message or message with given id
+      description: Returns oldest unprocessed message or message with given id or Not Found Error.
+      parameters:
+        - name: id
+          in: query
+          description: Filter by message ID
+          required: true
+          schema:
+            type: number
+      responses:
+        200:
+          description: Message
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Ok'
+                - type: object
+                  properties:
+                    msg:
+                      type: object
+                      allOf:
+                        - $ref: './components/message.yml#/components/schemas/Message'
+                    
+        404:
+          description: Message with given id not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+        400:
+          description: Missing required parameters
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+
+    post:
+      summary: Add message to the queue
+      description: Adds a new message to the queue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageInput'
+      responses:
+        201:
+          description: Message created
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Created'
+                - type: object
+                  properties:
+                    msg:
+                      type: object
+                      allOf:
+                        - $ref: './components/message.yml#/components/schemas/Message'
+        400:
+          description: Missing required parameters or passed unregistered publisher
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+    patch:
+      summary: Update state of an existing message
+      description: Updates state of a specific message by ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageUpdate'
+      responses:
+        200:
+          description: Message updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './components/response.yml#/components/schemas/Ok'
+        400:
+          description: Missing required parameters or passed invalid state
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+        404:
+          description: Message with given id not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+
+    delete:
+      summary: Delete a message
+      description: Removes a message from the queue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageDelete'
+      responses:
+        200:
+          description: Message deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: './components/response.yml#/components/schemas/Ok'
+        400:
+          description: Missing required parameters - id
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+        404:
+          description: Message with given id not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+
+components:
+  schemas:
+    MessageInput:
+      allOf:
+      - $ref: './components/message.yml#/components/schemas/Message'
+      - type: object
+        required: 
+          - msg
+          - publisher
+        properties:
+          id:
+            readOnly: true
+          state:
+            readOnly: true
+
+    MessageUpdate:
+      allOf:
+      - $ref: './components/message.yml#/components/schemas/Message'
+      - type: object
+        required: 
+          - id
+          - state
+        properties:
+          msg:
+            readOnly: true
+          publisher:
+            readOnly: true
+    
+    MessageDelete:
+      allOf:
+      - $ref: './components/message.yml#/components/schemas/Message'
+      - type: object
+        required: 
+          - id
+        properties:
+          id:
+            readOnly: true
+          msg:
+            readOnly: true
+          publisher:
+            readOnly: true
+    

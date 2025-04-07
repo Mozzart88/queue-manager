@@ -1,0 +1,25 @@
+components:
+  schemas:
+    NotFound:
+      allOf:
+      - $ref: './response.yml#/components/schemas/CommonResponse'
+      - type: object
+        properties:
+          code:
+            type: number
+            example: 404
+          msg:
+            type: string
+            example: 'Not Found:'
+
+    BadRequest:
+      allOf:
+      - $ref: './response.yml#/components/schemas/CommonResponse'
+      - type: object
+        properties:
+          code:
+            type: number
+            example: 400
+          msg:
+            type: string
+            example: 'Bad Request:'
