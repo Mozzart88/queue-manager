@@ -1,0 +1,87 @@
+openapi: 3.1.1
+info:
+  title: Queue API
+  description: API for manage batch of messages in queue
+  version: 1.0.0
+
+paths:
+  /queue:
+    get:
+      summary: Retrieve messages from queue
+      description: Returns all messages for specified publisher from queue with specified state.
+      parameters:
+        - name: publisher
+          in: query
+          description: Filter by publisher
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Filter by state
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Ok'
+                - type: object
+                  properties:
+                    msg:
+                      type: array
+                      items:
+                        type: object
+                        allOf:
+                        - $ref: './components/message.yml#/components/schemas/Message'
+                    
+        400:
+          description: Missing required parameters - publisher and/or state
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+    post:
+      summary: Add new messages to the queue
+      description: Add new messages to the queue from specified publisher and marks with state 'new'.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                publisher: 
+                  type: string
+                msgs:
+                  type: array
+                  items:
+                    type: string
+
+      responses:
+        201:
+          description: Messages has been added to the queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Created'
+                - type: object
+                  properties:
+                    msg:
+                      type: number
+                      description: number of added messages to the queue
+                      example: 2
+
+        400:
+          description: Missing requiered name field - publisher and/or msgs
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
