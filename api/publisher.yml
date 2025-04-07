@@ -1,0 +1,176 @@
+openapi: 3.1.1
+info:
+  title: Publisher API
+  description: API for managing publishers
+  version: 1.0.0
+
+paths:
+  /publisher:
+    get:
+      summary: Retrieve publisher by name (can be used to get id to unregister publisher)
+      description: Returns Publisher id and name.
+      parameters:
+        - name: id
+          in: query
+          description: Filter by publisher id
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Filter by publisher name
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Publisher
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Ok'
+                - type: object
+                  properties:
+                    msg:
+                      type: object
+                      allOf:
+                        - $ref: './components/publisher.yml#/components/schemas/Publisher'
+                    
+        404:
+          description: Publisher with given name not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+        400:
+          description: Missing required parameters
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+
+    post:
+      summary: Register new publisher
+      description: Register new publisher.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublisherInput'
+      responses:
+        201:
+          description: Publisher created
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/Created'
+                - type: object
+                  properties:
+                    msg:
+                      type: object
+                      allOf:
+                        - $ref: './components/publisher.yml#/components/schemas/Publisher'
+        400:
+          description: Missing requiered name field
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+    patch:
+      summary: Update publisher name
+      description: Updates Publisher name with specified ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublisherUpdate'
+      responses:
+        200:
+          description: Message updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './components/response.yml#/components/schemas/Ok'
+        400:
+          description: Missing required parameters - id or name
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+        404:
+          description: Message with given id not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+
+    delete:
+      summary: Unregister publisher
+      description: Removes publisher. All unresolved messages will be deleted too
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublisherDelete'
+
+      responses:
+        200:
+          description: Publisher unregistered successfully
+          content:
+            application/json:
+              schema:
+                $ref: './components/response.yml#/components/schemas/Ok'
+
+        400:
+          description: Missing required parameters - id or name
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/BadRequest'
+
+        404:
+          description: Publisher with given id or/and name not found
+          content:
+            application/json:
+              schema:
+                $ref: './components/error.yml#/components/schemas/NotFound'
+
+components:
+  schemas:
+    PublisherInput:
+      allOf:
+      - $ref: './components/publisher.yml#/components/schemas/Publisher'
+      - type: object
+        required: 
+          - name
+        properties:
+          id:
+            readOnly: true
+
+    PublisherUpdate:
+      allOf:
+      - $ref: './components/publisher.yml#/components/schemas/Publisher'
+      - type: object
+        anyOf:
+          - required: 
+            - id
+          - required: 
+            - name
+    
+    PublisherDelete:
+      allOf:
+      - $ref: './components/publisher.yml#/components/schemas/Publisher'
+      - type: object
+        required: 
+          - id
+        properties:
+          name:
+            readOnly: true
+    

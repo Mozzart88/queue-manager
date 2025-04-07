@@ -1,0 +1,12 @@
+components:
+  schemas:
+    Publisher:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 123
+        name:
+          type: string
+          example: "feed"
+        

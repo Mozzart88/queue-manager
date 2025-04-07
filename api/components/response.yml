@@ -1,0 +1,30 @@
+components:
+  schemas:
+    CommonResponse:
+      type: object
+      properties:
+        code:
+          type: number
+        msg:
+          type: string
+
+    Ok:
+      allOf:
+      - $ref: '#/components/schemas/CommonResponse'
+      - type: object
+        properties:
+          code:
+            type: number
+            example: 200
+          msg:
+            type: string
+            example: 'ok'
+
+    Created:
+      allOf:
+      - $ref: '#/components/schemas/CommonResponse'
+      - type: object
+        properties:
+          code:
+            type: number
+            example: 201
