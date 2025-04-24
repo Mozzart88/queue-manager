@@ -1,7 +1,9 @@
-package test_utils
+//go:build integration
+
+package db_test_utils
 
 import (
-	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/internal/repositories/crud"
 	"testing"
 
 	"fmt"
@@ -12,7 +14,7 @@ import (
 
 func loadDBFile(filename string) error {
 	file, err := os.Open(filename)
-	db := repos.GetDBInstance()
+	db := crud.GetDBInstance()
 	if err != nil {
 		return fmt.Errorf("failed to open SQL file: %w", err)
 	}

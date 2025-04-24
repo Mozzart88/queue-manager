@@ -1,4 +1,4 @@
-package repos
+package statementgenerators
 
 import (
 	"errors"
@@ -6,57 +6,57 @@ import (
 	"strings"
 )
 
-type order struct {
-	fields []string
-	order  string
+type Order struct {
+	Fields []string
+	Order  string
 }
 
-type where struct {
-	fields []string
-	union  string
+type Where struct {
+	Fields []string
+	Union  string
 }
 
-type fields []string
-type values []any
+type Fields []string
+type Values []any
 
-type limit int
+type Limit int
 
-func genWhereStatement(dst *string, w where) error {
+func genWhereStatement(dst *string, w Where) error {
 	var fields string
-	if len(w.fields) == 0 {
+	if len(w.Fields) == 0 {
 		return errors.New("empty where.fields")
 	}
-	if len(w.fields) == 1 {
-		fields = w.fields[0]
+	if len(w.Fields) == 1 {
+		fields = w.Fields[0]
 	} else {
-		if !strings.EqualFold(w.union, "AND") && !strings.EqualFold(w.union, "OR") {
-			return fmt.Errorf("invalid union: %s", w.union)
+		if !strings.EqualFold(w.Union, "AND") && !strings.EqualFold(w.Union, "OR") {
+			return fmt.Errorf("invalid union: %s", w.Union)
 		}
-		union := " " + strings.ToUpper(w.union) + " "
-		fields = strings.Join(w.fields, union)
+		union := " " + strings.ToUpper(w.Union) + " "
+		fields = strings.Join(w.Fields, union)
 	}
 	*dst = fmt.Sprintf("WHERE %s", fields)
 	return nil
 }
 
-func genOrderStatement(dst *string, o order) error {
+func genOrderStatement(dst *string, o Order) error {
 	var fields string
-	if len(o.fields) == 0 {
+	if len(o.Fields) == 0 {
 		return errors.New("empty order.fields")
 	}
-	if len(o.fields) == 1 {
-		fields = o.fields[0]
+	if len(o.Fields) == 1 {
+		fields = o.Fields[0]
 	} else {
-		fields = strings.Join(o.fields, ", ")
+		fields = strings.Join(o.Fields, ", ")
 	}
-	if len(o.order) > 0 && !strings.EqualFold(o.order, "ASC") && !strings.EqualFold(o.order, "DESC") {
-		return fmt.Errorf("invalid order: %s", o.order)
+	if len(o.Order) > 0 && !strings.EqualFold(o.Order, "ASC") && !strings.EqualFold(o.Order, "DESC") {
+		return fmt.Errorf("invalid order: %s", o.Order)
 	}
-	*dst = strings.Trim(fmt.Sprintf("ORDER BY %s %s", fields, strings.ToUpper(o.order)), " ")
+	*dst = strings.Trim(fmt.Sprintf("ORDER BY %s %s", fields, strings.ToUpper(o.Order)), " ")
 	return nil
 }
 
-func genSelectStatement(dst *string, table string, fields *fields, where *where, order *order, limit *limit) error {
+func SelectStatement(dst *string, table string, fields *Fields, where *Where, order *Order, limit *Limit) error {
 	if len(table) == 0 {
 		return fmt.Errorf("empty table name")
 	}
@@ -86,10 +86,12 @@ func genSelectStatement(dst *string, table string, fields *fields, where *where,
 	return nil
 }
 
-func genInsertVals(v *values) string {
+func insertVals(v *Values) string {
 	var vals []string
 	for _, value := range *v {
-		if val, ok := value.(int); ok {
+		if value == "?" {
+			vals = append(vals, value.(string))
+		} else if val, ok := value.(int); ok {
 			vals = append(vals, fmt.Sprintf("%d", val))
 		} else {
 			vals = append(vals, fmt.Sprintf("'%v'", value))
@@ -98,11 +100,11 @@ func genInsertVals(v *values) string {
 	return fmt.Sprintf("(%s)", strings.Join(vals, ", "))
 }
 
-func genInsertStatement(dst *string, table string, f *fields, v *values) error {
-	return genInsertManyStatement(dst, table, f, &[]values{*v})
+func InsertStatement(dst *string, table string, f *Fields, v Values) error {
+	return InsertManyStatement(dst, table, f, &[]Values{v})
 }
 
-func genInsertManyStatement(dst *string, table string, f *fields, v *[]values) error {
+func InsertManyStatement(dst *string, table string, f *Fields, v *[]Values) error {
 	var valuesArr []string
 	if len(table) == 0 {
 		return fmt.Errorf("empty table name")
@@ -111,18 +113,18 @@ func genInsertManyStatement(dst *string, table string, f *fields, v *[]values) e
 		return fmt.Errorf("empty values")
 	}
 	for _, values := range *v {
-		valuesArr = append(valuesArr, genInsertVals(&values))
+		valuesArr = append(valuesArr, insertVals(&values))
 	}
 	fields := ""
 	if f != nil && len(*f) > 0 {
-		fields = fmt.Sprintf("(%s)", strings.Join(*f, ", "))
+		fields = fmt.Sprintf(" (%s)", strings.Join(*f, ", "))
 	}
-	sql := fmt.Sprintf("INSERT INTO %s %s VALUES %s", table, fields, strings.Join(valuesArr, ", "))
+	sql := fmt.Sprintf("INSERT INTO %s%s VALUES %s", table, fields, strings.Join(valuesArr, ", "))
 	*dst = sql
 	return nil
 }
 
-func genUpdateStatement(dst *string, table string, f *fields, w *where) error {
+func UpdateStatement(dst *string, table string, f *Fields, w *Where) error {
 	if len(table) == 0 {
 		return fmt.Errorf("empty table name")
 	}
@@ -142,7 +144,7 @@ func genUpdateStatement(dst *string, table string, f *fields, w *where) error {
 	return nil
 }
 
-func genDeleteStatement(dst *string, table string, w *where) error {
+func DeleteStatement(dst *string, table string, w *Where) error {
 	if len(table) == 0 {
 		return fmt.Errorf("empty table name")
 	}

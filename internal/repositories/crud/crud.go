@@ -1,12 +1,49 @@
-package repos
+package crud
 
 import (
 	"database/sql"
+	sg "expat-news/queue-manager/internal/repositories/statement_generators"
+	"expat-news/queue-manager/pkg/utils"
+	"fmt"
 )
 
-func execSql(sql string) (sql.Result, error) {
+type Statement struct {
+	Value      any
+	Comparator func(feild string) string
+}
+
+type union int
+
+const (
+	U_Empty union = iota
+	U_And
+	U_Or
+)
+
+func (s union) String() string {
+	switch s {
+	case U_Empty:
+		return ""
+	case U_And:
+		return "AND"
+	case U_Or:
+		return "OR"
+	default:
+		return ""
+	}
+}
+
+type Where struct {
+	Statements map[string]Statement
+	Union      union
+}
+
+type Values []any
+type Fields []string
+
+func execSql(sql string, args ...any) (sql.Result, error) {
 	db := GetDBInstance()
-	res, err := db.Exec(sql)
+	res, err := db.Exec(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +82,34 @@ func tx(callback func() (int, error)) (int, error) {
 	return val, nil
 }
 
-func insert(table string, f *fields, v *values) (int, error) {
+func placeholders(v *Values) sg.Values {
+	n := len(*v)
+	if n <= 0 {
+		return sg.Values{}
+	}
+	parts := make(sg.Values, n)
+	for i := range parts {
+		parts[i] = "?"
+	}
+	return parts
+}
+
+func (f *Fields) prepare() *sg.Fields {
+	if f == nil {
+		return nil
+	}
+	return utils.Ptr(sg.Fields(*f))
+}
+
+func Insert(table string, f *Fields, v *Values) (int, error) {
 	var sql string
-	if err := genInsertStatement(&sql, table, f, v); err != nil {
+	if v == nil || len(*v) == 0 {
+		return -1, fmt.Errorf("values cant be empty in insert routine")
+	}
+	if err := sg.InsertStatement(&sql, table, f.prepare(), (placeholders(v))); err != nil {
 		return -1, err
 	}
-	res, err := execSql(sql)
+	res, err := execSql(sql, *v...)
 	if err != nil {
 		return -1, err
 	}
@@ -61,28 +120,92 @@ func insert(table string, f *fields, v *values) (int, error) {
 	return int(resId), nil
 }
 
-func insertMany(table string, f *fields, v *[]values) (int, error) {
+func InsertMany(table string, f *Fields, v *[]Values) (int, error) {
 	var sql string
-	if err := genInsertManyStatement(&sql, table, f, v); err != nil {
+	var result int64 = 0
+	if v == nil {
+		return -1, fmt.Errorf("values cant be empty in insert routine")
+	}
+	if err := sg.InsertStatement(&sql, table, f.prepare(), placeholders(&((*v)[0]))); err != nil {
 		return -1, err
 	}
-	res, err := execSql(sql)
+	db := GetDBInstance()
+	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return -1, err
 	}
-	result, err := res.RowsAffected()
-	if err != nil {
-		return -1, nil
+	defer stmt.Close()
+	for _, vals := range *v {
+		res, err := stmt.Exec(vals...)
+		if err != nil {
+			return -1, err
+		}
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return -1, nil
+		}
+		result += rowsAffected
 	}
 	return int(result), nil
 }
 
-func update(table string, f *fields, w *where) (int, error) {
+func (w *Where) prepare() *sg.Where {
+	if w == nil {
+		return nil
+	}
+	res := sg.Where{Fields: []string{}, Union: w.Union.String()}
+	for key, stmt := range w.Statements {
+		res.Fields = append(res.Fields, stmt.Comparator(key))
+	}
+	return &res
+}
+
+func (w Where) New() Where {
+	w.Statements = make(map[string]Statement)
+	return w
+}
+
+func (w *Where) Add(colName string, value any, comporator func(field string) string) {
+	w.Statements[colName] = Statement{value, comporator}
+}
+
+func (w *Where) Equals(colName string, value any) {
+	w.Add(colName, value, Equals)
+}
+
+func (w Where) Len() int {
+	return len(w.Statements)
+}
+
+func (o *Order) prepare() *sg.Order {
+	if o == nil {
+		return nil
+	}
+	res := sg.Order{Fields: []string{}, Order: o.Order}
+	res.Fields = append(res.Fields, o.Fields...)
+	return &res
+}
+
+func (w *Where) values() []any {
+	if w == nil {
+		return nil
+	}
+	res := []any{}
+	for _, stmt := range w.Statements {
+		res = append(res, stmt.Value)
+	}
+	return res
+}
+
+func Update(table string, f *Fields, w *Where) (int, error) {
 	var sql string
-	if err := genUpdateStatement(&sql, table, f, w); err != nil {
+	if f == nil {
+		return -1, fmt.Errorf("fields cant be empty in update routine")
+	}
+	if err := sg.UpdateStatement(&sql, table, f.prepare(), w.prepare()); err != nil {
 		return -1, err
 	}
-	res, err := execSql(sql)
+	res, err := execSql(sql, w.values()...)
 	if err != nil {
 		return -1, err
 	}
@@ -93,12 +216,12 @@ func update(table string, f *fields, w *where) (int, error) {
 	return int(affected), nil
 }
 
-func delete(table string, w *where) (int64, error) {
+func Delete(table string, w *Where) (int64, error) {
 	var sql string
-	if err := genDeleteStatement(&sql, table, w); err != nil {
+	if err := sg.DeleteStatement(&sql, table, w.prepare()); err != nil {
 		return -1, err
 	}
-	res, err := execSql(sql)
+	res, err := execSql(sql, w.values()...)
 	if err != nil {
 		return -1, err
 	}
@@ -113,7 +236,7 @@ type cell struct {
 	value any
 }
 
-func (c *cell) Get() any {
+func (c cell) Get() any {
 	return c.value
 }
 
@@ -150,13 +273,23 @@ func rowsToMap(rows *sql.Rows) ([]QueryRow, error) {
 	return results, nil
 }
 
-func get(table string, f *fields, w *where, o *order, l *limit) ([]QueryRow, error) {
+type Limit int
+type Order struct {
+	Fields []string
+	Order  string
+}
+
+func Get(table string, f *Fields, w *Where, o *Order, l *Limit) ([]QueryRow, error) {
 	db := GetDBInstance()
 	var sql string
-	if err := genSelectStatement(&sql, table, f, w, o, l); err != nil {
+	var limit *sg.Limit = nil
+	if l != nil {
+		limit = utils.Ptr(sg.Limit(*l))
+	}
+	if err := sg.SelectStatement(&sql, table, f.prepare(), w.prepare(), o.prepare(), limit); err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(sql)
+	rows, err := db.Query(sql, w.values()...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,9 +297,9 @@ func get(table string, f *fields, w *where, o *order, l *limit) ([]QueryRow, err
 	return rowsToMap(rows)
 }
 
-func getOne(table string, f *fields, w *where, o *order) (QueryRow, error) {
-	var l limit = 1
-	res, err := get(table, f, w, o, &l)
+func GetOne(table string, f *Fields, w *Where, o *Order) (QueryRow, error) {
+	var l Limit = 1
+	res, err := Get(table, f, w, o, &l)
 	if len(res) == 0 {
 		return nil, nil
 	}

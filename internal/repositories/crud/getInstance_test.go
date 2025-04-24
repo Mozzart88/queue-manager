@@ -1,6 +1,6 @@
 //go:build integration
 
-package repos
+package crud
 
 import "testing"
 
