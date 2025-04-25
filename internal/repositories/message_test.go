@@ -4,13 +4,12 @@ package repos_test
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"testing"
 )
 
 func TestAddMessage(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		publisherId int
@@ -51,9 +50,7 @@ func TestAddMessage(t *testing.T) {
 	}
 }
 func TestAddMessages(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		publisherId int
@@ -84,9 +81,7 @@ func TestAddMessages(t *testing.T) {
 }
 
 func TestUpdateStateMessage(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       int
@@ -126,9 +121,7 @@ func TestUpdateStateMessage(t *testing.T) {
 	}
 }
 func TestDeleteMessage(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id int

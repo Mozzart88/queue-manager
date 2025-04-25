@@ -1,4 +1,4 @@
-package repos
+package crud
 
 import (
 	"database/sql"

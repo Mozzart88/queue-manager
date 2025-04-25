@@ -1,17 +1,17 @@
 package repos
 
-import "fmt"
+import (
+	"expat-news/queue-manager/internal/repositories/crud"
+	"fmt"
+)
 
 const messageTable = "message"
 
 func DeleteMessage(id int) error {
-	var w where = where{
-		[]string{},
-		"",
-	}
-	predicate := fmt.Sprintf("id = %d", id)
-	w.fields = append(w.fields, predicate)
-	affected, err := delete(messageTable, &w)
+	w := crud.NewWhere()
+
+	w.Equals("id", id)
+	affected, err := crud.Delete(messageTable, w)
 	if err != nil {
 		return err
 	}
@@ -31,14 +31,13 @@ func UpdateStateMessage(id int, newState State_t) error {
 		return fmt.Errorf("invalid state: %s", newState)
 	}
 
-	var w = where{
-		[]string{fmt.Sprintf("id = %d", id)},
-		"",
-	}
-	var f = fields{
+	w := crud.NewWhere()
+	w.Equals("id", id)
+
+	var f = crud.Fields{
 		fmt.Sprintf("status_id = %d", NewState.id),
 	}
-	affected, err := update(messageTable, &f, &w)
+	affected, err := crud.Update(messageTable, &f, w)
 	if err != nil {
 		return err
 	}
@@ -49,14 +48,14 @@ func UpdateStateMessage(id int, newState State_t) error {
 }
 
 func AddMessage(content string, publisherId int) (int, error) {
-	return insert(messageTable, &fields{"content", "publisher_id"}, &values{content, publisherId})
+	return crud.Insert(messageTable, &crud.Fields{"content", "publisher_id"}, &crud.Values{content, publisherId})
 }
 
 func AddMessages(publisherId int, msgs *[]string) (int, error) {
-	var v []values
+	var v []crud.Values
 	for _, msg := range *msgs {
-		v = append(v, values{msg, publisherId})
+		v = append(v, crud.Values{msg, publisherId})
 	}
 
-	return insertMany(messageTable, &fields{"content", "publisher_id"}, &v)
+	return crud.InsertMany(messageTable, &crud.Fields{"content", "publisher_id"}, &v)
 }

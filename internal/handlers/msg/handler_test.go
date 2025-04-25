@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"expat-news/queue-manager/internal/handlers/msg"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/internal/test_utils"
 	"expat-news/queue-manager/pkg/utils/httpServer"
 	"io"
@@ -35,7 +36,9 @@ func test_msg_handler_body_eq(a, b httpServer.Response) bool {
 
 func TestHandler(t *testing.T) {
 	const target = "/msg"
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
+	releaseSuppress := test_utils.SuppressLogging()
+	defer releaseSuppress()
 	tests := []struct {
 		req        *http.Request
 		expected   *expected
@@ -62,6 +65,21 @@ func TestHandler(t *testing.T) {
 				http.StatusCreated,
 				httpServer.Response{
 					Msg:  `{"id":7,"publisher":"pagina12","msg":"some new msg","state":"new"}`,
+					Code: http.StatusCreated,
+				},
+			},
+			nil,
+		},
+		{
+			httptest.NewRequest(
+				http.MethodPost,
+				target,
+				bytes.NewBufferString(`{"msg": "{\"content\":\"**Latest news for today**\\n\\nA tragic accident occurred in Santiago del Estero, where a 2-year-old boy died after choking on a candy while at his grandmother's house with his parents. Despite medical efforts to save him, the child did not survive.\\n\\nIn other news, Argentine President Mauricio Macri visited Mar del Plata, where he criticized negotiations between the PRO and La Libertad Avanza parties.\\n\\nAdditionally, former President Roberto García Moritán was questioned on a TV program about his alleged infidelity to Pampita, leaving him emotional.\\n\\nThe US-China trade war continues to affect global markets, with the International Monetary Fund warning that the global debt public could surpass pandemic levels due to tariffs.\",\"recipient\":\"post\"}","publisher": "pagina12"}`),
+			),
+			&expected{
+				http.StatusCreated,
+				httpServer.Response{
+					Msg:  `{"id":8,"publisher":"pagina12","msg":"{\"content\":\"**Latest news for today**\\n\\nA tragic accident occurred in Santiago del Estero, where a 2-year-old boy died after choking on a candy while at his grandmother's house with his parents. Despite medical efforts to save him, the child did not survive.\\n\\nIn other news, Argentine President Mauricio Macri visited Mar del Plata, where he criticized negotiations between the PRO and La Libertad Avanza parties.\\n\\nAdditionally, former President Roberto García Moritán was questioned on a TV program about his alleged infidelity to Pampita, leaving him emotional.\\n\\nThe US-China trade war continues to affect global markets, with the International Monetary Fund warning that the global debt public could surpass pandemic levels due to tariffs.\",\"recipient\":\"post\"}","state":"new"}`,
 					Code: http.StatusCreated,
 				},
 			},
@@ -123,7 +141,7 @@ func TestHandler(t *testing.T) {
 
 func TestHandler_negative(t *testing.T) {
 	const target = "/msg"
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	releaseSuppress := test_utils.SuppressLogging()
 	defer releaseSuppress()
 	tests := []struct {

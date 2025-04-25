@@ -20,6 +20,18 @@ components:
             type: string
             example: 'ok'
 
+    NoContent:
+      allOf:
+      - $ref: '#/components/schemas/CommonResponse'
+      - type: object
+        properties:
+          code:
+            type: number
+            example: 204
+          msg:
+            type: string
+            example: 'Found: '
+
     Created:
       allOf:
       - $ref: '#/components/schemas/CommonResponse'

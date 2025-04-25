@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"expat-news/queue-manager/internal/handlers/queue"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/internal/test_utils"
 	"expat-news/queue-manager/pkg/utils/httpServer"
 	"io"
@@ -35,7 +36,7 @@ func test_handler_body_eq(a, b httpServer.Response) bool {
 
 func TestHandler(t *testing.T) {
 	const target = "/queue"
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	onLogging := test_utils.SuppressLogging()
 	defer onLogging()
 
@@ -51,6 +52,17 @@ func TestHandler(t *testing.T) {
 				httpServer.Response{
 					Msg:  `[{"id":3,"publisher":"pagina12","msg":"some post from Pagina 12","state":"new"},{"id":4,"publisher":"pagina12","msg":"some other post from Pagina 12","state":"new"}]`,
 					Code: http.StatusOK,
+				},
+			},
+			nil,
+		},
+		{
+			httptest.NewRequest(http.MethodGet, target+`?publisher=pagina12&state=active`, nil),
+			&expected{
+				http.StatusNoContent,
+				httpServer.Response{
+					Msg:  "[]",
+					Code: http.StatusNoContent,
 				},
 			},
 			nil,

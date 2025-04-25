@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-func Send(w http.ResponseWriter, response httpServer.Response) {
+func Send(w http.ResponseWriter, r *http.Request, response httpServer.Response) {
 	httpServer.SendResponse(w, response)
-	logger.Message(fmt.Sprintf("%d %s", response.Code, response.Msg))
+	logger.Message(fmt.Sprintf("%s %s %d", r.Method, r.URL, response.Code))
 }
 
-func SendError(w http.ResponseWriter, response httpServer.Response) {
+func SendError(w http.ResponseWriter, r *http.Request, response httpServer.Response) {
 	httpServer.SendResponse(w, response)
-	logger.Error(fmt.Sprintf("%d %s", response.Code, response.Msg))
+	logger.Error(fmt.Sprintf("%s %s %d %s", r.Method, r.URL, response.Code, response.Msg))
 }

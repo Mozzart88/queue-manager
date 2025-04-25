@@ -1,6 +1,9 @@
 package repos
 
-import "fmt"
+import (
+	"expat-news/queue-manager/internal/repositories/crud"
+	"fmt"
+)
 
 type State_t string
 
@@ -31,42 +34,37 @@ func NewState(id int, name State_t) *State {
 
 func GetState(id *int, name *State_t) (*State, error) {
 	var result State
-	var w where = where{
-		[]string{},
-		"",
-	}
 	if id == nil && name == nil {
 		return nil, fmt.Errorf("empty id and name")
 	}
+	w := crud.NewWhere()
 
 	if id != nil {
-		predicate := fmt.Sprintf("id = %d", *id)
-		w.fields = append(w.fields, predicate)
+		w.Equals("id", *id)
 	}
 	if name != nil {
-		predicate := fmt.Sprintf("name = '%s'", *name)
-		w.fields = append(w.fields, predicate)
+		w.Equals("name", *name)
 	}
-	if len(w.fields) > 0 {
-		w.union = "and"
+	if w.Len() > 0 {
+		w.Union = crud.U_And
 	}
 
-	res, err := getOne(stateTable, &fields{"id", "name"}, &w, nil)
+	res, err := crud.GetOne(stateTable, &crud.Fields{"id", "name"}, w, nil)
 	if err != nil {
 		return nil, err
 	}
 	if res == nil {
 		return nil, nil
 	}
-	if id, ok := res["id"].value.(int64); ok {
+	if id, ok := res["id"].Get().(int64); ok {
 		result.id = int(id)
 	} else {
-		return nil, fmt.Errorf("fail to assert type %v", res["id"].value)
+		return nil, fmt.Errorf("fail to assert type %v", res["id"].Get())
 	}
-	if name, ok := res["name"].value.(string); ok {
+	if name, ok := res["name"].Get().(string); ok {
 		result.name = State_t(name)
 	} else {
-		return nil, fmt.Errorf("fail to assert type %v", res["name"].value)
+		return nil, fmt.Errorf("fail to assert type %v", res["name"].Get())
 	}
 	return &result, nil
 }

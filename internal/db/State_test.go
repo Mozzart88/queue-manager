@@ -4,7 +4,7 @@ package db_test
 
 import (
 	db "expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/test_utils"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/pkg/utils"
 	"testing"
 )
@@ -23,7 +23,7 @@ func compare_test_db_states(a, b *db.State) bool {
 }
 
 func TestStateGet(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		id       *int
 		name     *string

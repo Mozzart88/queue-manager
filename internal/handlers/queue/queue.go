@@ -31,7 +31,10 @@ func get(q *db.Queue) httpServer.Response {
 		return httpServer.InternalServerError(err.Error())
 	}
 	if len(msgs) == 0 {
-		return httpServer.NotFound("empty result")
+		return httpServer.Response{
+			Msg:  "[]",
+			Code: http.StatusNoContent,
+		}
 	}
 	result, err := json.Marshal(msgs)
 	if err != nil {
@@ -83,24 +86,24 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 		if err := parseQuery(&queue, r.URL.Query()); err != nil {
-			utils.SendError(w, httpServer.BadRequest(err.Error()))
+			utils.SendError(w, r, httpServer.BadRequest(err.Error()))
 			return
 		}
 		response = get(&queue)
 	} else if r.Method == http.MethodPost {
 		var msgs []string
 		if err := parseBody(&queue, &msgs, r.Body); err != nil {
-			utils.SendError(w, httpServer.BadRequest(err.Error()))
+			utils.SendError(w, r, httpServer.BadRequest(err.Error()))
 			return
 		}
 		response = insert(&queue, &msgs)
 	} else {
-		utils.SendError(w, httpServer.MethodNotAllowed(r.Method))
+		utils.SendError(w, r, httpServer.MethodNotAllowed(r.Method))
 		return
 	}
 	if response.Code >= 400 {
-		utils.SendError(w, response)
+		utils.SendError(w, r, response)
 	} else {
-		utils.Send(w, response)
+		utils.Send(w, r, response)
 	}
 }
