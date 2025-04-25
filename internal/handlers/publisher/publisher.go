@@ -112,7 +112,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	var publisher db.Publisher
 	var response httpServer.Response
 	if err := parseRequest(&publisher, r.Body, r.URL.Query()); err != nil {
-		utils.SendError(w, httpServer.BadRequest(err.Error()))
+		utils.SendError(w, r, httpServer.BadRequest(err.Error()))
 		return
 	}
 	if r.Method == http.MethodGet {
@@ -124,12 +124,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodDelete {
 		response = delete(&publisher)
 	} else {
-		utils.SendError(w, httpServer.MethodNotAllowed(r.Method))
+		utils.SendError(w, r, httpServer.MethodNotAllowed(r.Method))
 		return
 	}
 	if response.Code >= 400 {
-		utils.SendError(w, response)
+		utils.SendError(w, r, response)
 	} else {
-		utils.Send(w, response)
+		utils.Send(w, r, response)
 	}
 }
