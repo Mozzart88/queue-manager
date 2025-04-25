@@ -4,6 +4,7 @@ package repos_test
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/internal/test_utils"
 	"expat-news/queue-manager/pkg/utils"
 	"strings"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestGetPublisher(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       *int
@@ -65,7 +66,7 @@ func TestGetPublisher(t *testing.T) {
 }
 
 func TestAddPublisher(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		name     string
@@ -107,7 +108,7 @@ func TestAddPublisher(t *testing.T) {
 }
 
 func TestUpdatePublisher(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       int
@@ -147,7 +148,7 @@ func TestUpdatePublisher(t *testing.T) {
 }
 
 func TestDeletePublisher(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id   *int
@@ -193,7 +194,7 @@ type whantError struct {
 }
 
 func TestDeletePublisher_negative(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id         *int

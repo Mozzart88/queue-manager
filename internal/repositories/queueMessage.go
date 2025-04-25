@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"expat-news/queue-manager/internal/repositories/crud"
 	"fmt"
 )
 
@@ -93,23 +94,23 @@ func (q *QueueMessage) setStateName(value any) error {
 	return nil
 }
 
-func (q *QueueMessage) fillValues(row QueryRow) error {
-	if err := q.setId(row["id"].value); err != nil {
+func (q *QueueMessage) fillValues(row crud.QueryRow) error {
+	if err := q.setId(row["id"].Get()); err != nil {
 		return err
 	}
-	if err := q.setContent(row["msg"].value); err != nil {
+	if err := q.setContent(row["msg"].Get()); err != nil {
 		return err
 	}
-	if err := q.setPublisherId(row["publisher_id"].value); err != nil {
+	if err := q.setPublisherId(row["publisher_id"].Get()); err != nil {
 		return err
 	}
-	if err := q.setStateId(row["status_id"].value); err != nil {
+	if err := q.setStateId(row["status_id"].Get()); err != nil {
 		return err
 	}
-	if err := q.setPublisherName(row["publisher"].value); err != nil {
+	if err := q.setPublisherName(row["publisher"].Get()); err != nil {
 		return err
 	}
-	if err := q.setStateName(row["status"].value); err != nil {
+	if err := q.setStateName(row["status"].Get()); err != nil {
 		return err
 	}
 	return nil
@@ -117,8 +118,8 @@ func (q *QueueMessage) fillValues(row QueryRow) error {
 
 type oldest_t *bool
 
-func queueFields() fields {
-	return fields{
+func queueFields() crud.Fields {
+	return crud.Fields{
 		"id",
 		"msg",
 		"publisher_id",
@@ -141,18 +142,18 @@ func NewQueueMessage(id int, content string, publisherId int, publisherName stri
 
 func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, error) {
 	var result *QueueMessage = &QueueMessage{}
-	var w where = where{[]string{}, "AND"}
-	var f fields = queueFields()
-	var order = order{[]string{"id"}, "ASC"}
+	w := crud.Where.New(crud.Where{Union: crud.U_And})
+	f := queueFields()
+	var order = crud.Order{Fields: []string{"id"}, Order: "ASC"}
 
 	if o != nil && !*o {
-		order.order = "DESC"
+		order.Order = "DESC"
 	}
 
-	w.fields = append(w.fields, fmt.Sprintf("publisher = '%s'", publisher))
-	w.fields = append(w.fields, fmt.Sprintf("status = '%s'", s))
+	w.Equals("publisher", publisher)
+	w.Equals("status", s)
 
-	res, err := getOne(queueTable, &f, &w, &order)
+	res, err := crud.GetOne(queueTable, &f, &w, &order)
 	if err != nil {
 		return nil, err
 	}
@@ -167,12 +168,12 @@ func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, er
 
 func GetUniqQueueMessage(id int) (*QueueMessage, error) {
 	var result = &QueueMessage{}
-	var w where = where{[]string{}, ""}
-	var f fields = queueFields()
+	var f crud.Fields = queueFields()
 
-	w.fields = append(w.fields, fmt.Sprintf("id = %d", id))
+	w := crud.Where.New(crud.Where{})
+	w.Equals("id", id)
 
-	res, err := getOne(queueTable, &f, &w, nil)
+	res, err := crud.GetOne(queueTable, &f, &w, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -187,19 +188,18 @@ func GetUniqQueueMessage(id int) (*QueueMessage, error) {
 
 func GetMessages(publisher string, s State_t, o oldest_t) ([]QueueMessage, error) {
 	var result []QueueMessage
-	var w where = where{[]string{}, "AND"}
-	var f fields = queueFields()
-	var order = order{[]string{"id"}, "ASC"}
+	var f crud.Fields = queueFields()
+	var order = crud.Order{Fields: []string{"id"}, Order: "ASC"}
+
+	w := crud.Where.New(crud.Where{Union: crud.U_And})
+	w.Equals("publisher", publisher)
+	w.Equals("status", s)
 
 	if o != nil && !*o {
-		order.fields = []string{"id"}
-		order.order = "DESC"
+		order.Order = "DESC"
 	}
 
-	w.fields = append(w.fields, fmt.Sprintf("publisher = '%s'", publisher))
-	w.fields = append(w.fields, fmt.Sprintf("status = '%s'", s))
-
-	res, err := get(queueTable, &f, &w, &order, nil)
+	res, err := crud.Get(queueTable, &f, &w, &order, nil)
 	if err != nil {
 		return nil, err
 	}

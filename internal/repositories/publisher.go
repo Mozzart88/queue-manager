@@ -1,6 +1,9 @@
 package repos
 
-import "fmt"
+import (
+	"expat-news/queue-manager/internal/repositories/crud"
+	"fmt"
+)
 
 const publisherTable = "publisher"
 
@@ -26,67 +29,57 @@ func NewPublisher(id int, name string) *Publisher {
 
 func GetPublisher(id *int, name *string) (*Publisher, error) {
 	var result Publisher
-	var w where = where{
-		[]string{},
-		"",
-	}
+	w := crud.Where.New(crud.Where{})
 	if id == nil && name == nil {
 		return nil, fmt.Errorf("empty id and name")
 	}
 
 	if id != nil {
-		predicate := fmt.Sprintf("id = %d", *id)
-		w.fields = append(w.fields, predicate)
+		w.Equals("id", *id)
 	}
 	if name != nil {
-		predicate := fmt.Sprintf("name = '%s'", *name)
-		w.fields = append(w.fields, predicate)
+		w.Equals("name", *name)
 	}
-	if len(w.fields) > 1 {
-		w.union = "and"
+	if len(w.Statements) > 1 {
+		w.Union = crud.U_And
 	}
 
-	res, err := getOne(publisherTable, &fields{"id", "name"}, &w, nil)
+	res, err := crud.GetOne(publisherTable, &crud.Fields{"id", "name"}, &w, nil)
 	if err != nil {
 		return nil, err
 	}
 	if res == nil {
 		return nil, nil
 	}
-	if id, ok := res["id"].value.(int64); ok {
+	if id, ok := res["id"].Get().(int64); ok {
 		result.id = int(id)
 	} else {
-		return nil, fmt.Errorf("fail to assert type %v", res["id"].value)
+		return nil, fmt.Errorf("fail to assert type %v", res["id"].Get())
 	}
-	if name, ok := res["name"].value.(string); ok {
+	if name, ok := res["name"].Get().(string); ok {
 		result.name = name
 	} else {
-		return nil, fmt.Errorf("fail to assert type %v", res["name"].value)
+		return nil, fmt.Errorf("fail to assert type %v", res["name"].Get())
 	}
 	return &result, nil
 }
 
 func DeletePublisher(id *int, name *string) error {
-	var w where = where{
-		[]string{},
-		"",
-	}
+	w := crud.Where.New(crud.Where{})
 	if id == nil && name == nil {
 		return fmt.Errorf("empty id and name")
 	}
 
 	if id != nil {
-		predicate := fmt.Sprintf("id = %d", *id)
-		w.fields = append(w.fields, predicate)
+		w.Statements["id"] = crud.Statement{Value: *id, Comparator: crud.Equals}
 	}
 	if name != nil {
-		predicate := fmt.Sprintf("name = '%s'", *name)
-		w.fields = append(w.fields, predicate)
+		w.Statements["name"] = crud.Statement{Value: *name, Comparator: crud.Equals}
 	}
-	if len(w.fields) > 0 {
-		w.union = "and"
+	if len(w.Statements) > 0 {
+		w.Union = crud.U_And
 	}
-	affected, err := delete(publisherTable, &w)
+	affected, err := crud.Delete(publisherTable, &w)
 	if err != nil {
 		return err
 	}
@@ -109,14 +102,12 @@ func DeletePublisher(id *int, name *string) error {
 }
 
 func UpdatePublisher(id int, newName string) error {
-	var w = where{
-		[]string{fmt.Sprintf("id = %d", id)},
-		"",
-	}
-	var f = fields{
+	w := crud.Where.New(crud.Where{})
+	w.Statements["id"] = crud.Statement{Value: id, Comparator: crud.Equals}
+	var f = crud.Fields{
 		fmt.Sprintf("name = '%s'", newName),
 	}
-	affected, err := update(publisherTable, &f, &w)
+	affected, err := crud.Update(publisherTable, &f, &w)
 	if err != nil {
 		return err
 	}
@@ -132,5 +123,5 @@ func AddPublisher(name string) (int, error) {
 	} else if res != nil {
 		return res.id, fmt.Errorf("already exists")
 	}
-	return insert(publisherTable, &fields{"name"}, &values{name})
+	return crud.Insert(publisherTable, &crud.Fields{"name"}, &crud.Values{name})
 }

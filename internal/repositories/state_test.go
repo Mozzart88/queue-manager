@@ -4,13 +4,13 @@ package repos_test
 
 import (
 	repos "expat-news/queue-manager/internal/repositories"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
+	"expat-news/queue-manager/pkg/utils"
 	"testing"
 )
 
 func TestGetState(t *testing.T) {
-	if err := setupDB(); err != nil {
-		t.Fatalf("fail to prepare database: %v", err)
-	}
+	db_test_utils.SetupDB(t)
 
 	tests := []struct {
 		id       *int
@@ -19,22 +19,22 @@ func TestGetState(t *testing.T) {
 	}{
 		{
 			nil,
-			ptr(repos.STATE_NEW),
+			utils.Ptr(repos.STATE_NEW),
 			repos.NewState(1, repos.STATE_NEW),
 		},
 		{
-			ptr(0),
+			utils.Ptr(0),
 			nil,
 			repos.NewState(0, repos.STATE_DONE),
 		},
 		{
-			ptr(2),
-			ptr(repos.STATE_ACTIVE),
+			utils.Ptr(2),
+			utils.Ptr(repos.STATE_ACTIVE),
 			repos.NewState(2, repos.STATE_ACTIVE),
 		},
 		{
-			ptr(0),
-			ptr(repos.STATE_ACTIVE),
+			utils.Ptr(0),
+			utils.Ptr(repos.STATE_ACTIVE),
 			nil,
 		},
 	}
