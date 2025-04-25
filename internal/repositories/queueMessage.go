@@ -142,7 +142,8 @@ func NewQueueMessage(id int, content string, publisherId int, publisherName stri
 
 func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, error) {
 	var result *QueueMessage = &QueueMessage{}
-	w := crud.Where.New(crud.Where{Union: crud.U_And})
+	w := crud.NewWhere()
+	w.Union = crud.U_And
 	f := queueFields()
 	var order = crud.Order{Fields: []string{"id"}, Order: "ASC"}
 
@@ -153,7 +154,7 @@ func GetQueueMessage(publisher string, s State_t, o oldest_t) (*QueueMessage, er
 	w.Equals("publisher", publisher)
 	w.Equals("status", s)
 
-	res, err := crud.GetOne(queueTable, &f, &w, &order)
+	res, err := crud.GetOne(queueTable, &f, w, &order)
 	if err != nil {
 		return nil, err
 	}
@@ -170,10 +171,10 @@ func GetUniqQueueMessage(id int) (*QueueMessage, error) {
 	var result = &QueueMessage{}
 	var f crud.Fields = queueFields()
 
-	w := crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 	w.Equals("id", id)
 
-	res, err := crud.GetOne(queueTable, &f, &w, nil)
+	res, err := crud.GetOne(queueTable, &f, w, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +192,8 @@ func GetMessages(publisher string, s State_t, o oldest_t) ([]QueueMessage, error
 	var f crud.Fields = queueFields()
 	var order = crud.Order{Fields: []string{"id"}, Order: "ASC"}
 
-	w := crud.Where.New(crud.Where{Union: crud.U_And})
+	w := crud.NewWhere()
+	w.Union = crud.U_And
 	w.Equals("publisher", publisher)
 	w.Equals("status", s)
 
@@ -199,7 +201,7 @@ func GetMessages(publisher string, s State_t, o oldest_t) ([]QueueMessage, error
 		order.Order = "DESC"
 	}
 
-	res, err := crud.Get(queueTable, &f, &w, &order, nil)
+	res, err := crud.Get(queueTable, &f, w, &order, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ func GetState(id *int, name *State_t) (*State, error) {
 	if id == nil && name == nil {
 		return nil, fmt.Errorf("empty id and name")
 	}
-	w := crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 
 	if id != nil {
 		w.Equals("id", *id)
@@ -49,7 +49,7 @@ func GetState(id *int, name *State_t) (*State, error) {
 		w.Union = crud.U_And
 	}
 
-	res, err := crud.GetOne(stateTable, &crud.Fields{"id", "name"}, &w, nil)
+	res, err := crud.GetOne(stateTable, &crud.Fields{"id", "name"}, w, nil)
 	if err != nil {
 		return nil, err
 	}

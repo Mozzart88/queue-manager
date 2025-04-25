@@ -10,7 +10,7 @@ import (
 )
 
 func compare_test_queue_message(a, b *repos.QueueMessage) bool {
-	if a == nil && a != nil {
+	if a == nil && b != a {
 		return false
 	}
 	if a.Content() != b.Content() {

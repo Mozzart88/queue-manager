@@ -8,10 +8,10 @@ import (
 const messageTable = "message"
 
 func DeleteMessage(id int) error {
-	w := crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 
 	w.Equals("id", id)
-	affected, err := crud.Delete(messageTable, &w)
+	affected, err := crud.Delete(messageTable, w)
 	if err != nil {
 		return err
 	}
@@ -31,13 +31,13 @@ func UpdateStateMessage(id int, newState State_t) error {
 		return fmt.Errorf("invalid state: %s", newState)
 	}
 
-	var w = crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 	w.Equals("id", id)
 
 	var f = crud.Fields{
 		fmt.Sprintf("status_id = %d", NewState.id),
 	}
-	affected, err := crud.Update(messageTable, &f, &w)
+	affected, err := crud.Update(messageTable, &f, w)
 	if err != nil {
 		return err
 	}

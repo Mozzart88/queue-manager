@@ -29,7 +29,7 @@ func NewPublisher(id int, name string) *Publisher {
 
 func GetPublisher(id *int, name *string) (*Publisher, error) {
 	var result Publisher
-	w := crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 	if id == nil && name == nil {
 		return nil, fmt.Errorf("empty id and name")
 	}
@@ -40,11 +40,11 @@ func GetPublisher(id *int, name *string) (*Publisher, error) {
 	if name != nil {
 		w.Equals("name", *name)
 	}
-	if len(w.Statements) > 1 {
+	if w.Len() > 1 {
 		w.Union = crud.U_And
 	}
 
-	res, err := crud.GetOne(publisherTable, &crud.Fields{"id", "name"}, &w, nil)
+	res, err := crud.GetOne(publisherTable, &crud.Fields{"id", "name"}, w, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -65,21 +65,21 @@ func GetPublisher(id *int, name *string) (*Publisher, error) {
 }
 
 func DeletePublisher(id *int, name *string) error {
-	w := crud.Where.New(crud.Where{})
+	w := crud.NewWhere()
 	if id == nil && name == nil {
 		return fmt.Errorf("empty id and name")
 	}
 
 	if id != nil {
-		w.Statements["id"] = crud.Statement{Value: *id, Comparator: crud.Equals}
+		w.Equals("id", *id)
 	}
 	if name != nil {
-		w.Statements["name"] = crud.Statement{Value: *name, Comparator: crud.Equals}
+		w.Equals("name", *name)
 	}
-	if len(w.Statements) > 0 {
+	if w.Len() > 0 {
 		w.Union = crud.U_And
 	}
-	affected, err := crud.Delete(publisherTable, &w)
+	affected, err := crud.Delete(publisherTable, w)
 	if err != nil {
 		return err
 	}
@@ -102,12 +102,12 @@ func DeletePublisher(id *int, name *string) error {
 }
 
 func UpdatePublisher(id int, newName string) error {
-	w := crud.Where.New(crud.Where{})
-	w.Statements["id"] = crud.Statement{Value: id, Comparator: crud.Equals}
+	w := crud.NewWhere()
+	w.Equals("id", id)
 	var f = crud.Fields{
 		fmt.Sprintf("name = '%s'", newName),
 	}
-	affected, err := crud.Update(publisherTable, &f, &w)
+	affected, err := crud.Update(publisherTable, &f, w)
 	if err != nil {
 		return err
 	}
