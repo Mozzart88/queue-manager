@@ -1,4 +1,4 @@
-//_go:build integration
+//go:build integration
 
 package db_test_utils
 

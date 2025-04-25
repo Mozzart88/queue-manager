@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"expat-news/queue-manager/internal/handlers/queue"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/internal/test_utils"
 	"expat-news/queue-manager/pkg/utils/httpServer"
 	"io"
@@ -35,7 +36,7 @@ func test_handler_body_eq(a, b httpServer.Response) bool {
 
 func TestHandler(t *testing.T) {
 	const target = "/queue"
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	onLogging := test_utils.SuppressLogging()
 	defer onLogging()
 
