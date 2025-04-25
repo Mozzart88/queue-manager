@@ -10,7 +10,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go test -parallel=1 -tags "integration sqlite3" ./...
+RUN go test -p=1 -tags "integration sqlite3" ./...
 
 RUN go build -tags "osusergo netgo sqlite3" -ldflags "-linkmode external -extldflags -static" -o qm ./cmd/app/main.go
 VOLUME [ "/app/data" ]
