@@ -57,6 +57,17 @@ func TestHandler(t *testing.T) {
 			nil,
 		},
 		{
+			httptest.NewRequest(http.MethodGet, target+`?publisher=pagina12&state=active`, nil),
+			&expected{
+				http.StatusNoContent,
+				httpServer.Response{
+					Msg:  "[]",
+					Code: http.StatusNoContent,
+				},
+			},
+			nil,
+		},
+		{
 			httptest.NewRequest(http.MethodGet, target+"?publisher=some", nil),
 			&expected{
 				http.StatusBadRequest,

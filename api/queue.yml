@@ -39,6 +39,20 @@ paths:
                         allOf:
                         - $ref: './components/message.yml#/components/schemas/Message'
                     
+        204:
+          description: Queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: './components/response.yml#/components/schemas/NoContent'
+                - type: object
+                  properties:
+                    msg:
+                      type: array
+                      items:
+                        type: string
+                    
         400:
           description: Missing required parameters - publisher and/or state
           content:
