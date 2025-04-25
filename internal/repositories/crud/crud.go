@@ -7,37 +7,6 @@ import (
 	"fmt"
 )
 
-type Statement struct {
-	Value      any
-	Comparator func(feild string) string
-}
-
-type union int
-
-const (
-	U_Empty union = iota
-	U_And
-	U_Or
-)
-
-func (s union) String() string {
-	switch s {
-	case U_Empty:
-		return ""
-	case U_And:
-		return "AND"
-	case U_Or:
-		return "OR"
-	default:
-		return ""
-	}
-}
-
-type Where struct {
-	Statements map[string]Statement
-	Union      union
-}
-
 type Values []any
 type Fields []string
 
@@ -149,34 +118,6 @@ func InsertMany(table string, f *Fields, v *[]Values) (int, error) {
 	return int(result), nil
 }
 
-func (w *Where) prepare() *sg.Where {
-	if w == nil {
-		return nil
-	}
-	res := sg.Where{Fields: []string{}, Union: w.Union.String()}
-	for key, stmt := range w.Statements {
-		res.Fields = append(res.Fields, stmt.Comparator(key))
-	}
-	return &res
-}
-
-func (w Where) New() Where {
-	w.Statements = make(map[string]Statement)
-	return w
-}
-
-func (w *Where) Add(colName string, value any, comporator func(field string) string) {
-	w.Statements[colName] = Statement{value, comporator}
-}
-
-func (w *Where) Equals(colName string, value any) {
-	w.Add(colName, value, Equals)
-}
-
-func (w Where) Len() int {
-	return len(w.Statements)
-}
-
 func (o *Order) prepare() *sg.Order {
 	if o == nil {
 		return nil
@@ -184,17 +125,6 @@ func (o *Order) prepare() *sg.Order {
 	res := sg.Order{Fields: []string{}, Order: o.Order}
 	res.Fields = append(res.Fields, o.Fields...)
 	return &res
-}
-
-func (w *Where) values() []any {
-	if w == nil {
-		return nil
-	}
-	res := []any{}
-	for _, stmt := range w.Statements {
-		res = append(res, stmt.Value)
-	}
-	return res
 }
 
 func Update(table string, f *Fields, w *Where) (int, error) {
@@ -289,7 +219,8 @@ func Get(table string, f *Fields, w *Where, o *Order, l *Limit) ([]QueryRow, err
 	if err := sg.SelectStatement(&sql, table, f.prepare(), w.prepare(), o.prepare(), limit); err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(sql, w.values()...)
+	args := w.values()
+	rows, err := db.Query(sql, args...)
 	if err != nil {
 		return nil, err
 	}

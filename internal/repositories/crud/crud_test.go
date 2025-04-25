@@ -1,4 +1,4 @@
-//_go:build integration
+//go:build integration
 
 package crud
 
@@ -49,6 +49,12 @@ func setupDB() error {
 	return nil
 }
 
+func makeWhere(key string, value any) *Where {
+	w := NewWhere()
+	w.Equals(key, value)
+	return w
+}
+
 func TestExecSql(t *testing.T) {
 	os.Setenv("QDB_FILE", "../../../data/data.db")
 	_, err := execSql("SELECT * FROM message_status")
@@ -71,9 +77,9 @@ func compare_test_get_results(a, b *QueryRow) bool {
 	return true
 }
 
-func TestWhereNew(t *testing.T) {
-	where := Where.New(Where{})
-	if where.Statements == nil {
+func TestNewWhere(t *testing.T) {
+	where := NewWhere()
+	if where.statements == nil {
 		t.Error("statments equals nil")
 	} else if where.Union != U_Empty {
 		t.Errorf("union value expected be empty string, got %v", where.Union)
@@ -81,20 +87,21 @@ func TestWhereNew(t *testing.T) {
 }
 
 func TestWhereUnion(t *testing.T) {
-	where := Where.New(Where{})
+	where := NewWhere()
 	if where.Union != U_Empty {
 		t.Errorf("union value expected be empty, got %v", where.Union.String())
 	}
-	where = Where.New(Where{Union: U_Or})
+	where = NewWhere()
+	where.Union = U_Or
 	if where.Union != U_Or {
 		t.Errorf("union value expected be 'OR', got %v", where.Union.String())
 	}
 }
 
 func TestWhereAdd(t *testing.T) {
-	where := Where.New(Where{})
+	where := NewWhere()
 	where.Add("some", 1, Equals)
-	val, ok := where.Statements["some"]
+	val, ok := where.statements["some"]
 	if !ok {
 		t.Error("key 'some' not added to the statments")
 	} else if val.Value != 1 {
@@ -103,9 +110,9 @@ func TestWhereAdd(t *testing.T) {
 }
 
 func TestWhereEquals(t *testing.T) {
-	where := Where.New(Where{})
+	where := NewWhere()
 	where.Equals("some", 1)
-	val, ok := where.Statements["some"]
+	val, ok := where.statements["some"]
 	if !ok {
 		t.Error("key 'some' not added to the statments")
 	} else if val.Value != 1 {
@@ -114,7 +121,7 @@ func TestWhereEquals(t *testing.T) {
 }
 
 func TestWhereLen(t *testing.T) {
-	where := Where.New(Where{})
+	where := NewWhere()
 	where.Equals("some", 1)
 	if where.Len() != 1 {
 		t.Errorf("len expected equals 1, got %d", where.Len())
@@ -131,6 +138,7 @@ func TestGet(t *testing.T) {
 	if err := setupDB(); err != nil {
 		t.Fatalf("fail to prepare database: %v", err)
 	}
+
 	var l Limit = 1
 	tests := []struct {
 		w        *Where
@@ -189,11 +197,17 @@ func TestGet(t *testing.T) {
 			"publisher_id": {int64(3)},
 			"content":      {"some post from La Politica"},
 		}}},
-		{&Where{map[string]Statement{"id": {6, Equals}}, U_Empty}, &Fields{"publisher_id", "content"}, nil, nil, &[]QueryRow{{
-			"publisher_id": {int64(3)},
-			"content":      {"some post from La Politica"},
-		}}},
-		{&Where{map[string]Statement{"id": {7, Equals}}, U_Empty}, &Fields{"publisher_id", "content"}, nil, nil, &[]QueryRow{}},
+		{
+			makeWhere("id", 6),
+			&Fields{"publisher_id", "content"}, nil, nil, &[]QueryRow{{
+				"publisher_id": {int64(3)},
+				"content":      {"some post from La Politica"},
+			},
+			},
+		},
+		{
+			makeWhere("id", 7),
+			&Fields{"publisher_id", "content"}, nil, nil, &[]QueryRow{}},
 	}
 
 	for _, test := range tests {
@@ -240,11 +254,12 @@ func TestGetOne(t *testing.T) {
 			"publisher_id": {int64(3)},
 			"content":      {"some post from La Politica"},
 		}},
-		{&Where{map[string]Statement{"id": {6, Equals}}, U_Empty}, &Fields{"publisher_id", "content"}, nil, &QueryRow{
-			"publisher_id": {int64(3)},
-			"content":      {"some post from La Politica"},
-		}},
-		{&Where{map[string]Statement{"id": {7, Equals}}, U_Empty}, &Fields{"publisher_id", "content"}, nil, nil},
+		{makeWhere("id", 6),
+			&Fields{"publisher_id", "content"}, nil, &QueryRow{
+				"publisher_id": {int64(3)},
+				"content":      {"some post from La Politica"},
+			}},
+		{makeWhere("id", 7), &Fields{"publisher_id", "content"}, nil, nil},
 	}
 
 	for _, test := range tests {
@@ -282,11 +297,11 @@ func TestDelete(t *testing.T) {
 	}{
 		{
 			deleteQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				1,
 			},
 			getQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				nil,
 			},
 		},
@@ -338,12 +353,12 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			updateQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				&Fields{"status_id = 2"},
 				1,
 			},
 			getQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				&Fields{"status_id"},
 				QueryRow{
 					"status_id": {int64(2)},
@@ -352,12 +367,12 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			updateQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				&Fields{"status_id = 1", "publisher_id = 3"},
 				1,
 			},
 			getQ{
-				&Where{map[string]Statement{"id": {1, Equals}}, U_Empty},
+				makeWhere("id", 1),
 				&Fields{"status_id", "publisher_id"},
 				QueryRow{
 					"status_id":    {int64(1)},
@@ -442,10 +457,7 @@ func TestInsert(t *testing.T) {
 			test_utils.Fail(t, i, "unexpected error occured: %v", err)
 			continue
 		}
-		res, err := GetOne("publisher", test.get.f, &Where{
-			map[string]Statement{"id": {id, Equals}},
-			U_Empty,
-		}, nil)
+		res, err := GetOne("publisher", test.get.f, makeWhere("id", id), nil)
 		if err != nil {
 			test_utils.Fail(t, i, "unexpected error occured: %v", err)
 			continue
