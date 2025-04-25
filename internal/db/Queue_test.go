@@ -4,14 +4,14 @@ package db_test
 
 import (
 	db "expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/test_utils"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/pkg/utils"
 	"strings"
 	"testing"
 )
 
 func TestQueueGetMessage(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		q          db.Queue
 		o          *bool
@@ -71,7 +71,7 @@ func TestQueueGetMessage(t *testing.T) {
 	}
 }
 func TestQueueGetMessages(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		q          db.Queue
 		o          *bool
@@ -153,7 +153,7 @@ func TestQueueGetMessages(t *testing.T) {
 	}
 }
 func TestQueueAddMessages(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		q          db.Queue
 		msgs       []string

@@ -4,7 +4,7 @@ package db_test
 
 import (
 	db "expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/test_utils"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/pkg/utils"
 	"strings"
 	"testing"
@@ -28,7 +28,7 @@ type whantError struct {
 }
 
 func TestPublisherGet(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		p          db.Publisher
 		expected   *db.Publisher
@@ -90,7 +90,7 @@ func TestPublisherGet(t *testing.T) {
 }
 
 func TestPublisherRegister(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		p          db.Publisher
 		expected   *db.Publisher
@@ -136,7 +136,7 @@ func TestPublisherRegister(t *testing.T) {
 	}
 }
 func TestPublisherDelete(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		p          db.Publisher
 		expected   *db.Publisher
@@ -187,7 +187,7 @@ func TestPublisherDelete(t *testing.T) {
 	}
 }
 func TestPublisherUpdate(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		p          db.Publisher
 		expected   *db.Publisher

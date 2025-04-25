@@ -3,7 +3,7 @@ package db_test
 
 import (
 	db "expat-news/queue-manager/internal/db"
-	"expat-news/queue-manager/internal/test_utils"
+	"expat-news/queue-manager/internal/repositories/db_test_utils"
 	"expat-news/queue-manager/pkg/utils"
 	"reflect"
 	"strings"
@@ -37,7 +37,7 @@ func compare_test_db_message(a, b *db.Message) bool {
 }
 
 func TestMessageGet(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -103,7 +103,7 @@ func TestMessageGet(t *testing.T) {
 	}
 }
 func TestMessageSetState(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -197,7 +197,7 @@ func TestMessageSetState(t *testing.T) {
 	}
 }
 func TestMessageSetNew(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -273,7 +273,7 @@ func TestMessageSetNew(t *testing.T) {
 	}
 }
 func TestMessageSetActive(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -319,7 +319,7 @@ func TestMessageSetActive(t *testing.T) {
 	}
 }
 func TestMessageRollback(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -365,7 +365,7 @@ func TestMessageRollback(t *testing.T) {
 	}
 }
 func TestMessageSetDone(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -436,7 +436,7 @@ func TestMessageSetDone(t *testing.T) {
 	}
 }
 func TestMessageAdd(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
@@ -512,7 +512,7 @@ func TestMessageAdd(t *testing.T) {
 	}
 }
 func TestMessageDelete(t *testing.T) {
-	test_utils.SetupDB(t)
+	db_test_utils.SetupDB(t)
 	tests := []struct {
 		m          db.Message
 		expected   *db.Message
