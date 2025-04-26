@@ -59,10 +59,10 @@ func TestHandler(t *testing.T) {
 		{
 			httptest.NewRequest(http.MethodGet, target+`?publisher=pagina12&state=active`, nil),
 			&expected{
-				http.StatusNoContent,
+				http.StatusOK,
 				httpServer.Response{
 					Msg:  "[]",
-					Code: http.StatusNoContent,
+					Code: http.StatusOK,
 				},
 			},
 			nil,
